@@ -4,7 +4,10 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="2d532eb5-47c3-42e3-965f-2744e6a9a9bb" name="Changes" comment="" />
+    <list default="true" id="2d532eb5-47c3-42e3-965f-2744e6a9a9bb" name="Changes" comment="">
+      <change afterPath="$PROJECT_DIR$/src/Laravel/VariableDebuggerServiceProvider.php" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+    </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
@@ -57,7 +60,7 @@
       <option name="number" value="Default" />
       <option name="presentableId" value="Default" />
       <updated>1763114064456</updated>
-      <workItem from="1763114065591" duration="8519000" />
+      <workItem from="1763114065591" duration="9461000" />
     </task>
     <servers />
   </component>
