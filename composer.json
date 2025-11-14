@@ -1,0 +1,13 @@
+{
+  "require": {
+    "php": "^8.2"
+  },
+  "autoload": {
+    "psr-4": {
+      "LightLa\\VariableDebugger\\": "src/"
+    },
+    "files": [
+      "src/helpers.php"
+    ]
+  }
+}
