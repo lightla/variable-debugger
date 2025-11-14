@@ -3,6 +3,9 @@
   "description": "A lightweight PHP variable debugger",
   "type": "library",
   "license": "MIT",
+  "require": {
+    "php": "^8.2"
+  },
   "authors": [
     {
       "name": "lightsouler",
@@ -14,7 +17,7 @@
       "Lightla\\VariableDebugger\\": "src/"
     }
   },
-  "require": {
-    "php": "^8.2"
-  }
+  "files": [
+    "src/helpers.php"
+  ]
 }
