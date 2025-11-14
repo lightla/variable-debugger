@@ -1,5 +1,5 @@
 <?php
-namespace LightLa\VariableDebugger\Laravel;
+namespace LightLa\VariableDebugger\Adapters\Laravel;
 
 use Illuminate\Support\ServiceProvider;
 use Illuminate\Foundation\Configuration\Exceptions;
