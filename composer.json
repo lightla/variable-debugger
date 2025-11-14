@@ -1,13 +1,20 @@
 {
-  "require": {
-    "php": "^8.2"
-  },
+  "name": "lightsouler/lightla-variable-debugger",
+  "description": "A lightweight PHP variable debugger",
+  "type": "library",
+  "license": "MIT",
+  "authors": [
+    {
+      "name": "lightsouler",
+      "email": "lightsouler@hotmail.com"
+    }
+  ],
   "autoload": {
     "psr-4": {
-      "LightLa\\VariableDebugger\\": "src/"
-    },
-    "files": [
-      "src/helpers.php"
-    ]
+      "Lightla\\VariableDebugger\\": "src/"
+    }
+  },
+  "require": {
+    "php": "^8.2"
   }
 }
