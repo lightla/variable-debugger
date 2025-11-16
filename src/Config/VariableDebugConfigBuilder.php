@@ -6,15 +6,11 @@ use lightla\VariableDebugger\VariableDebugConfig;
 
 class VariableDebugConfigBuilder extends VariableDebugConfigurator
 {
+    use VariableDebugConfigBuilderBuildTrait;
+
     public function build(): VariableDebugConfig
     {
-        return new VariableDebugConfig(
-            $this->projectRootPath,
-            $this->maxDepth,
-            $this->showArrayMode,
-            $this->showValueType,
-            $this->showDetailAccessModifiers,
-        );
+        return $this->doBuild();
     }
 
     /**
@@ -22,6 +18,6 @@ class VariableDebugConfigBuilder extends VariableDebugConfigurator
      */
     public function injectGlobal(): void
     {
-        VariableDebugConfig::setGlobalConfig($this->build());
+        $this->doBuildWithInjectGlobal();
     }
 }

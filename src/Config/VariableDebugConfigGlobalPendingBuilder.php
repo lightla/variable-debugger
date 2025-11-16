@@ -6,28 +6,15 @@ use lightla\VariableDebugger\VariableDebugConfig;
 
 class VariableDebugConfigGlobalPendingBuilder extends VariableDebugConfigurator
 {
+    use VariableDebugConfigBuilderBuildTrait;
+
    public function __destruct()
    {
-       $this->injectGlobal();
+       $this->doBuildWithInjectGlobal();
    }
 
-    private function build(): VariableDebugConfig
+    public function build(): VariableDebugConfig
     {
-        return new VariableDebugConfig(
-            $this->projectRootPath,
-            $this->maxDepth,
-            $this->showArrayMode,
-            $this->showValueType,
-            $this->showDetailAccessModifiers,
-            $this->cliTheme
-        );
-    }
-
-    /**
-     * @return void
-     */
-    private function injectGlobal(): void
-    {
-        VariableDebugConfig::setGlobalConfig($this->build());
+        return $this->doBuild();
     }
 }
