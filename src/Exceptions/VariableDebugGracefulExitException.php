@@ -1,5 +1,5 @@
 <?php
-namespace LightLa\VariableDebugger\Exceptions;
+namespace lightla\VariableDebugger\Exceptions;
 
 class VariableDebugGracefulExitException extends \RuntimeException {
     public function __construct() {

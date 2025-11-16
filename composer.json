@@ -14,7 +14,8 @@
   ],
   "autoload": {
     "psr-4": {
-      "Lightla\\VariableDebugger\\": "src/"
+      "lightla\\VariableDebugger\\": "src/",
+      "lightla\\VariableDebuggerTests\\": "tests/"
     },
     "files": [
       "src/helpers.php"

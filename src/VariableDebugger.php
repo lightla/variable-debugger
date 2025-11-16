@@ -1,8 +1,8 @@
 <?php
-namespace LightLa\VariableDebugger;
+namespace lightla\VariableDebugger;
 
-use LightLa\VariableDebugger\Config\VariableDebugConfig;
-use LightLa\VariableDebugger\Exceptions\VariableDebugGracefulExitException;
+use lightla\VariableDebugger\Config\VariableDebugConfig;
+use lightla\VariableDebugger\Exceptions\VariableDebugGracefulExitException;
 
 class VariableDebugger
 {

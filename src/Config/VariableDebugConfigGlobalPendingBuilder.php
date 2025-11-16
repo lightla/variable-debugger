@@ -1,6 +1,6 @@
 <?php
 
-namespace LightLa\VariableDebugger\Config;
+namespace lightla\VariableDebugger\Config;
 
 class VariableDebugConfigGlobalPendingBuilder extends VariableDebugConfigurator
 {

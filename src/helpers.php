@@ -1,9 +1,9 @@
 <?php
 
-use LightLa\VariableDebugger\Config\VariableDebugConfig;
-use LightLa\VariableDebugger\Config\VariableDebugConfigGlobalPendingBuilder;
-use LightLa\VariableDebugger\VariableDebugger;
-use LightLa\VariableDebugger\VariablePendingDebug;
+use lightla\VariableDebugger\Config\VariableDebugConfig;
+use lightla\VariableDebugger\Config\VariableDebugConfigGlobalPendingBuilder;
+use lightla\VariableDebugger\VariableDebugger;
+use lightla\VariableDebugger\VariablePendingDebug;
 
 function v_gl_config(): VariableDebugConfigGlobalPendingBuilder
 {
@@ -48,4 +48,23 @@ function v_dd(...$vars): VariablePendingDebug
             $backtrace, ...$vars
         )
     );
+}
+
+/**
+ * @return callable|null
+ * @throws Throwable
+ */
+function v_register_exception_handler(): ?callable
+{
+    return set_exception_handler(function (Throwable $exception) {
+        if ($exception instanceof \lightla\VariableDebugger\Exceptions\VariableDebugGracefulExitException) {
+            http_response_code(200);
+
+            return;
+        }
+
+        restore_exception_handler();
+
+        throw $exception;
+    });
 }

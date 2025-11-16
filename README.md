@@ -9,3 +9,11 @@
 • Báo cho Git "làm như file này không thay đổi"
 • Dù bạn sửa file, Git vẫn ignore
 • Dùng khi muốn giữ file nhưng không track changes
+
+
+
+
+./vendor/bin/pest this-library/tests
+
+./vendor/bin/phpunit this-library/tests --testdox
+./vendor/bin/pest this-library/tests --testdox
