@@ -12,6 +12,8 @@ class VariableDebugViaCliStrategy implements VariableDebugStrategy
 
     // Background panel giống #2d2d2d (không dùng 40 = black nữa)
     private const BG_BLACK = "\033[48;5;236m";
+    // Foreground cho phần fill, trùng với background để "tàng hình"
+    private const COLOR_FILL = "\033[38;5;236m";
 
     private const COLOR_FILE_PATH   = "\033[38;5;117m";  // #9cdcfe
     private const COLOR_LINE_NUMBER = "\033[1;38;5;159m"; // #9cdcfe (sáng)
@@ -20,7 +22,7 @@ class VariableDebugViaCliStrategy implements VariableDebugStrategy
     private const COLOR_NUMBER      = "\033[38;5;150m";  // #b5cea8
     private const COLOR_BOOL_NULL   = "\033[38;5;75m";   // #569cd6
     private const COLOR_KEY         = "\033[38;5;117m";  // #9cdcfe
-    private const COLOR_CLASS_NAME  = "\033[38;5;80m";   // #4ec9b0
+    private const COLOR_CLASS_NAME  = "\033[38;5;182m";   // #4ec9b0
     private const COLOR_VISIBILITY  = "\033[38;5;182m";  // #c586c0
     private const COLOR_PUNCTUATION = "\033[38;5;244m";  // #d4d4d4 (xám)
     private const COLOR_COMMENT     = "\033[38;5;241m";  // #808080
@@ -37,8 +39,8 @@ class VariableDebugViaCliStrategy implements VariableDebugStrategy
 
         $outputLines = [];
         $outputLines[] =
-            self::COLOR_PUNCTUATION . "📁/" .
-            self::COLOR_FILE_PATH . $file .
+            self::COLOR_PUNCTUATION . "📁" .
+            self::COLOR_FILE_PATH . "/{$file}" .
             self::COLOR_PUNCTUATION . ":" .
             self::COLOR_LINE_NUMBER . $line;
         $outputLines[] = self::COLOR_PUNCTUATION . str_repeat('─', 10);
@@ -58,13 +60,18 @@ class VariableDebugViaCliStrategy implements VariableDebugStrategy
         $this->printFullWidth($outputLines);
     }
 
-    /**
-     * In block với background FULL chiều ngang terminal,
-     * sao cho nhìn giống cái card HTML (hình chữ nhật kín).
-     */
     private function printFullWidth(array $lines): void
     {
         $terminalWidth = $this->getTerminalWidth();
+
+        // Màu panel xám đậm
+        $bg = self::BG_BLACK;
+
+        // Fill “tàng hình” (fg = bg)
+        $fill = self::COLOR_FILL;
+
+        // --- Padding top (1 dòng) ---
+        echo $bg . $fill . str_repeat('█', $terminalWidth) . self::COLOR_RESET . PHP_EOL;
 
         $paddingLeft  = 1;
         $paddingRight = 1;
@@ -73,28 +80,86 @@ class VariableDebugViaCliStrategy implements VariableDebugStrategy
             // Bỏ mã màu để tính width thực
             $plain = preg_replace('/\033\[[0-9;]*m/', '', $line);
 
-            if (function_exists('mb_strwidth')) {
-                $contentWidth = mb_strwidth($plain, 'UTF-8');
-            } else {
-                $contentWidth = strlen($plain);
+            $contentWidth = function_exists('mb_strwidth')
+                ? mb_strwidth($plain, 'UTF-8')
+                : strlen($plain);
+
+            // Tổng chiều rộng text + padding
+            $visibleWidth = $paddingLeft + $contentWidth + $paddingRight;
+
+            // Phần còn lại để fill full width
+            $remaining = max(0, $terminalWidth - $visibleWidth);
+
+            echo self::BG_BLACK
+                . str_repeat(' ', $paddingLeft)    // padding trái
+                . $line                            // nội dung có màu riêng
+                . str_repeat(' ', $paddingRight);  // padding phải
+
+            // Filler chiếm hết phần còn lại, fg = bg nên "tàng hình"
+            if ($remaining > 0) {
+                echo self::COLOR_FILL . str_repeat('█', $remaining);
             }
 
-            $visibleLength = $paddingLeft + $contentWidth + $paddingRight;
+            echo self::COLOR_RESET . PHP_EOL;
+        }
 
-            $spacesToFill = $terminalWidth - $visibleLength;
-            if ($spacesToFill < 0) {
-                $spacesToFill = 0;
-            }
+        // --- Padding bottom (1 dòng) ---
+        echo $bg . $fill . str_repeat('█', $terminalWidth) . self::COLOR_RESET . PHP_EOL;
 
+        // 1 dòng trống dưới block để dễ đọc
+        echo PHP_EOL;
+    }
+
+
+    /**
+     * In block với background FULL chiều ngang terminal,
+     * sao cho nhìn giống cái card HTML (hình chữ nhật kín).
+     */
+    private function printFullWidth1(array $lines): void
+    {
+        // Lấy chiều rộng thực của terminal
+        $terminalWidth = $this->getTerminalWidth();
+
+        // Padding đẹp giống margin nội dung
+        $paddingLeft  = 1;
+        $paddingRight = 1;
+
+        /**
+         * Dùng block char █ để fill phần còn thiếu của dòng.
+         * Ưu điểm:
+         *   - Không bị VSCode wrap
+         *   - Không tạo ký tự trắng
+         *   - Không bị resize làm lộ background
+         *   - Luôn trông như block full-width
+         */
+        $fillChar = "█";
+
+        foreach ($lines as $line) {
+
+            // Tính độ dài thật (không tính mã màu)
+            $plain = preg_replace('/\033\[[0-9;]*m/', '', $line);
+
+            $contentWidth = function_exists('mb_strwidth')
+                ? mb_strwidth($plain, 'UTF-8')
+                : strlen($plain);
+
+            // Độ dài text + padding
+            $visibleWidth = $paddingLeft + $contentWidth + $paddingRight;
+
+            // Phần còn lại để fill full-width
+            $remaining = max(0, $terminalWidth - $visibleWidth);
+
+            // In 1 dòng đầy màu background + filler không wrap
             echo self::BG_BLACK
                 . str_repeat(' ', $paddingLeft)
                 . $line
-                . str_repeat(' ', $paddingRight + $spacesToFill)
+                . str_repeat(' ', $paddingRight)
+                . str_repeat($fillChar, $remaining)
                 . self::COLOR_RESET
                 . PHP_EOL;
         }
 
-        // Dòng trống dưới block (giống margin-bottom)
+        // Thêm dòng trống phía dưới cho đẹp
         echo PHP_EOL;
     }
 
