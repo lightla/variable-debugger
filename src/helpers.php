@@ -1,7 +1,6 @@
 <?php
 
 use lightla\VariableDebugger\Config\VariableDebugConfigGlobalPendingBuilder;
-use lightla\VariableDebugger\DebugStrategy\VariableDebugViaHtmlStrategy;
 use lightla\VariableDebugger\Exceptions\VariableDebugGracefulExitException;
 use lightla\VariableDebugger\VariableDebugConfig;
 use lightla\VariableDebugger\VariableDebugger;

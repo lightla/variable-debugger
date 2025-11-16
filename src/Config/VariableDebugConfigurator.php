@@ -2,7 +2,7 @@
 
 namespace lightla\VariableDebugger\Config;
 
-use lightla\VariableDebugger\DebugStrategy\VariableDebugCliColorTheme;
+use lightla\VariableDebugger\DebugStrategy\Cli\VariableDebugCliColorTheme;
 
 class VariableDebugConfigurator
 {

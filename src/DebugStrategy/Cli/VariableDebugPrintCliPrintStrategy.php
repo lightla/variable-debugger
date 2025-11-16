@@ -1,13 +1,13 @@
 <?php
 
-namespace lightla\VariableDebugger\DebugStrategy;
+namespace lightla\VariableDebugger\DebugStrategy\Cli;
 
 use lightla\VariableDebugger\VariableDebugConfig;
-use lightla\VariableDebugger\VariableDebugStrategy;
+use lightla\VariableDebugger\VariableDebugPrintStrategy;
 
-class VariableDebugViaCliStrategy implements VariableDebugStrategy
+class VariableDebugPrintCliPrintStrategy implements VariableDebugPrintStrategy
 {
-    public function dumpFromTrace(
+    public function printFromTrace(
         VariableDebugConfig $config,
         array $backtrace,
         ...$vars
@@ -39,8 +39,6 @@ class VariableDebugViaCliStrategy implements VariableDebugStrategy
             }
         }
 
-//        $outputLines[] = $this->colorTheme->punctuation . $this->strHeaderFooterSeparatorLine();
-
         $this->printFullWidth($colorTheme, $outputLines);
     }
 
@@ -53,11 +51,8 @@ class VariableDebugViaCliStrategy implements VariableDebugStrategy
             echo $line . $colorTheme->reset . PHP_EOL;
         }
 
-        // Reset thêm 1 lần nữa cho chắc chắn
         echo $colorTheme->reset;
     }
-
-    // --- PHẦN FORMAT GIỮ NGUYÊN NHƯ ÔNG ĐANG DÙNG ---
 
     private function formatVariable(
         VariableDebugConfig $config,

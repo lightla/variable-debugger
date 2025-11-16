@@ -1,10 +1,10 @@
 <?php
 
-namespace lightla\VariableDebugger\DebugStrategy;
+namespace lightla\VariableDebugger\DebugStrategy\Cli;
 
 class VariableDebugCliColorTheme
 {
-    public string $reset          = "\033[0m";
+    public string $reset          = "";
 
     public string $filePath       = "";
     public string $lineNumber     = "";

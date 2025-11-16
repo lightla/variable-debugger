@@ -4,7 +4,7 @@ namespace lightla\VariableDebugger;
 
 use lightla\VariableDebugger\Config\VariableDebugConfigArrayShowMode;
 use lightla\VariableDebugger\Config\VariableDebugConfigBuilder;
-use lightla\VariableDebugger\DebugStrategy\VariableDebugCliColorTheme;
+use lightla\VariableDebugger\DebugStrategy\Cli\VariableDebugCliColorTheme;
 
 class VariableDebugConfig
 {

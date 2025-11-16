@@ -1,23 +1,23 @@
 <?php
 namespace lightla\VariableDebugger;
 
-use lightla\VariableDebugger\DebugStrategy\VariableDebugViaCliStrategy;
-use lightla\VariableDebugger\DebugStrategy\VariableDebugViaHtmlStrategy;
+use lightla\VariableDebugger\DebugStrategy\Cli\VariableDebugPrintCliPrintStrategy;
+use lightla\VariableDebugger\DebugStrategy\Html\VariableDebugPrintHtmlPrintStrategy;
 use lightla\VariableDebugger\Exceptions\VariableDebugGracefulExitException;
 
 class VariableDebugger
 {
-    private VariableDebugStrategy $debugStrategy;
+    private VariableDebugPrintStrategy $printStrategy;
 
     public function __construct(
         private VariableDebugConfig $config,
-        ?VariableDebugStrategy $debugStrategy = null,
+        ?VariableDebugPrintStrategy $printStrategy = null,
     )
     {
-        if ($debugStrategy) {
-            $this->debugStrategy = $debugStrategy;
+        if ($printStrategy) {
+            $this->printStrategy = $printStrategy;
         } else {
-            $this->autoDetectDebugStrategy();
+            $this->autoDetectPrintStrategy();
         }
     }
 
@@ -28,20 +28,20 @@ class VariableDebugger
         return $this;
     }
 
-    public function setDebugStrategy(VariableDebugStrategy $debugStrategy): self
+    public function setPrintStrategy(VariableDebugPrintStrategy $printStrategy): self
     {
-        $this->debugStrategy = $debugStrategy;
+        $this->printStrategy = $printStrategy;
 
         return $this;
     }
 
-    public function autoDetectDebugStrategy(): self
+    public function autoDetectPrintStrategy(): self
     {
         $isCli = (PHP_SAPI === 'cli');
 
-        $this->debugStrategy = $isCli
-            ? new VariableDebugViaCliStrategy()
-            : new VariableDebugViaHtmlStrategy();
+        $this->printStrategy = $isCli
+            ? new VariableDebugPrintCliPrintStrategy()
+            : new VariableDebugPrintHtmlPrintStrategy();
 
         return $this;
     }
@@ -95,7 +95,7 @@ class VariableDebugger
      */
     public function dumpFromTrace(array $backtrace, ...$vars): void
     {
-        $this->debugStrategy->dumpFromTrace($this->config, $backtrace, ...$vars);
+        $this->printStrategy->printFromTrace($this->config, $backtrace, ...$vars);
     }
 
     #------------------

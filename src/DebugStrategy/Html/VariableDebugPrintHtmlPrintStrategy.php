@@ -1,13 +1,13 @@
 <?php
 
-namespace lightla\VariableDebugger\DebugStrategy;
+namespace lightla\VariableDebugger\DebugStrategy\Html;
 
 use lightla\VariableDebugger\VariableDebugConfig;
-use lightla\VariableDebugger\VariableDebugStrategy;
+use lightla\VariableDebugger\VariableDebugPrintStrategy;
 
-class VariableDebugViaHtmlStrategy implements VariableDebugStrategy
+class VariableDebugPrintHtmlPrintStrategy implements VariableDebugPrintStrategy
 {
-    public function dumpFromTrace(
+    public function printFromTrace(
         VariableDebugConfig $config,
         array $backtrace,
         ...$vars

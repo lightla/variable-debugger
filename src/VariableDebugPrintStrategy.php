@@ -2,7 +2,7 @@
 
 namespace lightla\VariableDebugger;
 
-interface VariableDebugStrategy
+interface VariableDebugPrintStrategy
 {
     /**
      * @param VariableDebugConfig $config
@@ -11,5 +11,5 @@ interface VariableDebugStrategy
      * @return void
      * @throws \ReflectionException
      */
-    public function dumpFromTrace(VariableDebugConfig $config, array $backtrace, ...$vars): void;
+    public function printFromTrace(VariableDebugConfig $config, array $backtrace, ...$vars): void;
 }
