@@ -1,6 +1,9 @@
 <?php
 
-namespace lightla\VariableDebugger\Config;
+namespace lightla\VariableDebugger;
+
+use lightla\VariableDebugger\Config\VariableDebugConfigArrayShowMode;
+use lightla\VariableDebugger\Config\VariableDebugConfigBuilder;
 
 class VariableDebugConfig
 {

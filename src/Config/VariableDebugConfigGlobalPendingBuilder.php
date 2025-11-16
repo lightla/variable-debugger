@@ -2,6 +2,8 @@
 
 namespace lightla\VariableDebugger\Config;
 
+use lightla\VariableDebugger\VariableDebugConfig;
+
 class VariableDebugConfigGlobalPendingBuilder extends VariableDebugConfigurator
 {
    public function __destruct()

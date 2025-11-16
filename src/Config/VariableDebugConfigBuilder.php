@@ -2,6 +2,8 @@
 
 namespace lightla\VariableDebugger\Config;
 
+use lightla\VariableDebugger\VariableDebugConfig;
+
 class VariableDebugConfigBuilder extends VariableDebugConfigurator
 {
     public function build(): VariableDebugConfig

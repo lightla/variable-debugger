@@ -1,7 +1,9 @@
 <?php
 
-use lightla\VariableDebugger\Config\VariableDebugConfig;
 use lightla\VariableDebugger\Config\VariableDebugConfigGlobalPendingBuilder;
+use lightla\VariableDebugger\DebugStrategy\VariableDebugViaHtmlStrategy;
+use lightla\VariableDebugger\Exceptions\VariableDebugGracefulExitException;
+use lightla\VariableDebugger\VariableDebugConfig;
 use lightla\VariableDebugger\VariableDebugger;
 use lightla\VariableDebugger\VariablePendingDebug;
 
@@ -12,13 +14,12 @@ function v_gl_config(): VariableDebugConfigGlobalPendingBuilder
 
 function v_dump(...$vars): VariablePendingDebug
 {
-    $variableDebugger = new VariableDebugger();
-
     $globalConfig = VariableDebugConfig::getGlobalConfig();
     $config = VariableDebugConfig::builder()->withMaxDepth(10)->build();
 
-    $variableDebugger->setConfig(
-        $globalConfig?->merge($config) ?? $config
+    $variableDebugger = new VariableDebugger(
+        $globalConfig?->merge($config) ?? $config,
+            null
     );
 
     return new VariablePendingDebug(
@@ -32,13 +33,12 @@ function v_dump(...$vars): VariablePendingDebug
 
 function v_dd(...$vars): VariablePendingDebug
 {
-    $variableDebugger = new VariableDebugger();
-
     $globalConfig = VariableDebugConfig::getGlobalConfig();
     $config = VariableDebugConfig::builder()->withMaxDepth(10)->build();
 
-    $variableDebugger->setConfig(
-        $globalConfig?->merge($config) ?? $config
+    $variableDebugger = new VariableDebugger(
+        $globalConfig?->merge($config) ?? $config,
+        null,
     );
 
     return new VariablePendingDebug(
@@ -57,7 +57,7 @@ function v_dd(...$vars): VariablePendingDebug
 function v_register_exception_handler(): ?callable
 {
     return set_exception_handler(function (Throwable $exception) {
-        if ($exception instanceof \lightla\VariableDebugger\Exceptions\VariableDebugGracefulExitException) {
+        if ($exception instanceof VariableDebugGracefulExitException) {
             http_response_code(200);
 
             return;

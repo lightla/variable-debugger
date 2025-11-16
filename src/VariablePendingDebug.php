@@ -2,7 +2,6 @@
 
 namespace lightla\VariableDebugger;
 
-use lightla\VariableDebugger\Config\VariableDebugConfig;
 use lightla\VariableDebugger\Config\VariableDebugConfigArrayShowMode;
 
 class VariablePendingDebug
