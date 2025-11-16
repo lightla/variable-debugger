@@ -7,45 +7,32 @@ use lightla\VariableDebugger\VariableDebugStrategy;
 
 class VariableDebugViaCliStrategy implements VariableDebugStrategy
 {
-    private VariableDebugCliColorTheme $colorTheme;
-
-    public function __construct(
-        ?VariableDebugCliColorTheme $colorTheme = null,
-    )
-    {
-        if ($colorTheme) {
-            $this->colorTheme = $colorTheme;
-        } else {
-            $this->colorTheme = VariableDebugCliColorTheme::noColor();
-        }
-    }
-
     public function dumpFromTrace(
         VariableDebugConfig $config,
         array $backtrace,
-                            ...$vars
+        ...$vars
     ): void {
-        $this->colorTheme = $config->getCliTheme() ?? $this->colorTheme;
+        $colorTheme = $config->resolveCliThemeOrDefault();
 
         $caller = $backtrace[0];
         $file = $this->calculateFilePathWithoutProjectRootPath($config, $caller['file']);
         $line = $caller['line'];
 
         $outputLines = [];
-        $outputLines[] = $this->colorTheme->punctuation . $this->strHeaderFooterSeparatorLine();
+        $outputLines[] = $colorTheme->punctuation . $this->strHeaderFooterSeparatorLine();
         $outputLines[] =
-            $this->colorTheme->punctuation . "📁" .
-            $this->colorTheme->filePath . "/{$file}" .
-            $this->colorTheme->punctuation . ":" .
-            $this->colorTheme->lineNumber . $line;
-        $outputLines[] = $this->colorTheme->punctuation . str_repeat('·', 5);
+            $colorTheme->punctuation . "📁" .
+            $colorTheme->filePath . "/{$file}" .
+            $colorTheme->punctuation . ":" .
+            $colorTheme->lineNumber . $line;
+        $outputLines[] = $colorTheme->punctuation . str_repeat('·', 5);
 
         foreach ($vars as $i => $var) {
             if ($i > 0) {
-                $outputLines[] = $this->colorTheme->punctuation . $this->strVarSeparatorLine();
+                $outputLines[] = $colorTheme->punctuation . $this->strVarSeparatorLine();
             }
 
-            $formattedVar = $this->formatVariable($config, $var);
+            $formattedVar = $this->formatVariable($config, $colorTheme, $var);
             $lines = explode(PHP_EOL, $formattedVar);
             foreach ($lines as $lineContent) {
                 $outputLines[] = $lineContent;
@@ -54,38 +41,42 @@ class VariableDebugViaCliStrategy implements VariableDebugStrategy
 
 //        $outputLines[] = $this->colorTheme->punctuation . $this->strHeaderFooterSeparatorLine();
 
-        $this->printFullWidth($outputLines);
+        $this->printFullWidth($colorTheme, $outputLines);
     }
 
-    private function printFullWidth(array $lines): void
+    private function printFullWidth(
+        VariableDebugCliColorTheme $colorTheme,
+        array $lines
+    ): void
     {
         foreach ($lines as $line) {
-            echo $line . $this->colorTheme->reset . PHP_EOL;
+            echo $line . $colorTheme->reset . PHP_EOL;
         }
 
         // Reset thêm 1 lần nữa cho chắc chắn
-        echo $this->colorTheme->reset;
+        echo $colorTheme->reset;
     }
 
     // --- PHẦN FORMAT GIỮ NGUYÊN NHƯ ÔNG ĐANG DÙNG ---
 
     private function formatVariable(
         VariableDebugConfig $config,
-                            $var,
+        VariableDebugCliColorTheme $colorTheme,
+        mixed $var,
         int $depth = 0,
         string $indent = ''
     ): string {
         $maxDepth = $config->getMaxDepth();
         if ($depth > $maxDepth) {
-            return $this->colorTheme->comment . '[Max Depth Reached]';
+            return $colorTheme->comment . '[Max Depth Reached]';
         }
 
         if (is_array($var)) {
-            return $this->formatArray($config, $var, $depth, $indent);
+            return $this->formatArray($config, $colorTheme, $var, $depth, $indent);
         }
 
         if (is_object($var)) {
-            return $this->formatObject($config, $var, $depth, $indent);
+            return $this->formatObject($config, $colorTheme, $var, $depth, $indent);
         }
 
         $output = '';
@@ -93,14 +84,14 @@ class VariableDebugViaCliStrategy implements VariableDebugStrategy
         // STRING
         if (is_string($var)) {
             if ($config->getShowValueType()) {
-                $output .= $this->colorTheme->type . 'string'
-                    . $this->colorTheme->punctuation . '('
-                    . $this->colorTheme->number . strlen($var)
-                    . $this->colorTheme->punctuation . ') ';
+                $output .= $colorTheme->type . 'string'
+                    . $colorTheme->punctuation . '('
+                    . $colorTheme->number . strlen($var)
+                    . $colorTheme->punctuation . ') ';
             }
 
             return $output
-                . $this->colorTheme->string
+                . $colorTheme->string
                 . '"' . addcslashes($var, '"\\') . '"';
         }
 
@@ -109,13 +100,13 @@ class VariableDebugViaCliStrategy implements VariableDebugStrategy
             $type = is_int($var) ? 'int' : 'float';
 
             if ($config->getShowValueType()) {
-                $output .= $this->colorTheme->type . $type . $this->colorTheme->punctuation . '(';
+                $output .= $colorTheme->type . $type . $colorTheme->punctuation . '(';
             }
 
-            $output .= $this->colorTheme->number . $var;
+            $output .= $colorTheme->number . $var;
 
             if ($config->getShowValueType()) {
-                $output .= $this->colorTheme->punctuation . ')';
+                $output .= $colorTheme->punctuation . ')';
             }
 
             return $output;
@@ -124,13 +115,13 @@ class VariableDebugViaCliStrategy implements VariableDebugStrategy
         // BOOL
         if (is_bool($var)) {
             if ($config->getShowValueType()) {
-                $output .= $this->colorTheme->type . 'bool' . $this->colorTheme->punctuation . '(';
+                $output .= $colorTheme->type . 'bool' . $colorTheme->punctuation . '(';
             }
 
-            $output .= $this->colorTheme->boolNull . ($var ? 'true' : 'false');
+            $output .= $colorTheme->boolNull . ($var ? 'true' : 'false');
 
             if ($config->getShowValueType()) {
-                $output .= $this->colorTheme->punctuation . ')';
+                $output .= $colorTheme->punctuation . ')';
             }
 
             return $output;
@@ -138,32 +129,37 @@ class VariableDebugViaCliStrategy implements VariableDebugStrategy
 
         // NULL
         if (is_null($var)) {
-            return $this->colorTheme->boolNull . 'null';
+            return $colorTheme->boolNull . 'null';
         }
 
         // Other scalar types
         if ($config->getShowValueType()) {
-            $output .= $this->colorTheme->type . gettype($var) . ' ';
+            $output .= $colorTheme->type . gettype($var) . ' ';
         }
 
         return $output . print_r($var, true);
     }
 
-    private function formatArray(VariableDebugConfig $config, array $var, int $depth, string $indent): string
+    private function formatArray(
+        VariableDebugConfig $config,
+        VariableDebugCliColorTheme $colorTheme,
+        array $var,
+        int $depth,
+        string $indent): string
     {
         $count = count($var);
         $output = '';
 
         if ($config->getShowValueType()) {
-            $output .= $this->colorTheme->type . "array" . $this->colorTheme->punctuation
-                . "(" . $this->colorTheme->number . $count . $this->colorTheme->punctuation . ") ";
+            $output .= $colorTheme->type . "array" . $colorTheme->punctuation
+                . "(" . $colorTheme->number . $count . $colorTheme->punctuation . ") ";
         }
 
         if ($count === 0) {
-            return $output . $this->colorTheme->punctuation . "[]";
+            return $output . $colorTheme->punctuation . "[]";
         }
 
-        $output .= $this->colorTheme->punctuation . "[" . PHP_EOL;
+        $output .= $colorTheme->punctuation . "[" . PHP_EOL;
 
         $newIndent = $indent . "  ";
         $i = 0;
@@ -177,34 +173,41 @@ class VariableDebugViaCliStrategy implements VariableDebugStrategy
             $output .= $newIndent;
 
             if (is_string($key)) {
-                $output .= $this->colorTheme->string . '"' . $key . '"'
-                    . $this->colorTheme->punctuation . " => ";
+                $output .= $colorTheme->string . '"' . $key . '"'
+                    . $colorTheme->punctuation . " => ";
             } else {
-                $output .= $this->colorTheme->number . $key
-                    . $this->colorTheme->punctuation . " => ";
+                $output .= $colorTheme->number . $key
+                    . $colorTheme->punctuation . " => ";
             }
 
-            $output .= $this->formatVariable($config, $value, $depth + 1, $newIndent);
+            $output .= $this->formatVariable(
+                $config, $colorTheme, $value, $depth + 1, $newIndent
+            );
 
             if ($i < $count - 1) {
-                $output .= $this->colorTheme->punctuation . ",";
+                $output .= $colorTheme->punctuation . ",";
             }
 
             $output .= PHP_EOL;
             $i++;
 
             if ($showFirst && $count > 1) {
-                $output .= $newIndent . $this->colorTheme->comment
+                $output .= $newIndent . $colorTheme->comment
                     . "... (and " . ($count - 1) . " others)"
                     . PHP_EOL;
                 break;
             }
         }
 
-        return $output . $indent . $this->colorTheme->punctuation . "]";
+        return $output . $indent . $colorTheme->punctuation . "]";
     }
 
-    private function formatObject(VariableDebugConfig $config, object $var, int $depth, string $indent): string
+    private function formatObject(
+        VariableDebugConfig $config,
+        VariableDebugCliColorTheme $colorTheme,
+        object $var,
+        int $depth,
+        string $indent): string
     {
         $ref = new \ReflectionClass($var);
         $className = $ref->getName();
@@ -213,13 +216,13 @@ class VariableDebugViaCliStrategy implements VariableDebugStrategy
 
         // object(ClassName) {
         if ($config->getShowValueType()) {
-            $output .= $this->colorTheme->type . "object" . $this->colorTheme->punctuation
-                . "(" . $this->colorTheme->className . $className . $this->colorTheme->punctuation . ") "
-                . $this->colorTheme->punctuation . "{" . PHP_EOL;
+            $output .= $colorTheme->type . "object" . $colorTheme->punctuation
+                . "(" . $colorTheme->className . $className . $colorTheme->punctuation . ") "
+                . $colorTheme->punctuation . "{" . PHP_EOL;
         } else {
             // className {
-            $output .= $this->colorTheme->className . $className . " "
-                . $this->colorTheme->punctuation . "{" . PHP_EOL;
+            $output .= $colorTheme->className . $className . " "
+                . $colorTheme->punctuation . "{" . PHP_EOL;
         }
 
         // Gather ALL declared properties (includes inherited)
@@ -241,8 +244,8 @@ class VariableDebugViaCliStrategy implements VariableDebugStrategy
 
         if (empty($allProperties) && empty($objectVars)) {
             return $output . $indent . "  "
-                . $this->colorTheme->comment . "# No properties" . PHP_EOL
-                . $indent . $this->colorTheme->punctuation . "}";
+                . $colorTheme->comment . "# No properties" . PHP_EOL
+                . $indent . $colorTheme->punctuation . "}";
         }
 
         // ===== DECLARED PROPERTIES =====
@@ -254,29 +257,31 @@ class VariableDebugViaCliStrategy implements VariableDebugStrategy
                     : ($prop->isProtected() ? "protected" : "public");
 
                 $output .= $indent . "  "
-                    . $this->colorTheme->visibility . $visibility . " "
-                    . $this->colorTheme->key . $prop->getName()
-                    . $this->colorTheme->punctuation . ": ";
+                    . $colorTheme->visibility . $visibility . " "
+                    . $colorTheme->key . $prop->getName()
+                    . $colorTheme->punctuation . ": ";
             } else {
                 $visibility = $prop->isPrivate() ? "-"
                     : ($prop->isProtected() ? "#" : "+");
 
                 $output .= $indent . "  "
-                    . $this->colorTheme->visibility . $visibility . " "
-                    . $this->colorTheme->key . $prop->getName()
-                    . $this->colorTheme->punctuation . ": ";
+                    . $colorTheme->visibility . $visibility . " "
+                    . $colorTheme->key . $prop->getName()
+                    . $colorTheme->punctuation . ": ";
             }
 
             // VALUE
             if (!$prop->isInitialized($var)) {
-                $output .= $this->colorTheme->comment . "[uninitialized]" . PHP_EOL;
+                $output .= $colorTheme->comment . "[uninitialized]" . PHP_EOL;
             } else {
                 try {
                     $value = $prop->getValue($var);
-                    $output .= $this->formatVariable($config, $value, $depth + 1, $indent . "  ")
+                    $output .= $this->formatVariable(
+                            $config, $colorTheme, $value, $depth + 1, $indent . "  "
+                        )
                         . PHP_EOL;
                 } catch (\Throwable $e) {
-                    $output .= $this->colorTheme->error . "Error: " . $e->getMessage() . PHP_EOL;
+                    $output .= $colorTheme->error . "Error: " . $e->getMessage() . PHP_EOL;
                 }
             }
         }
@@ -290,21 +295,23 @@ class VariableDebugViaCliStrategy implements VariableDebugStrategy
 
             if ($config->getShowDetailAccessModifiers()) {
                 $output .= $indent . "  "
-                    . $this->colorTheme->visibility . "public "
-                    . $this->colorTheme->key . '"' . $propName . '"'
-                    . $this->colorTheme->punctuation . ": ";
+                    . $colorTheme->visibility . "public "
+                    . $colorTheme->key . '"' . $propName . '"'
+                    . $colorTheme->punctuation . ": ";
             } else {
                 $output .= $indent . "  "
-                    . $this->colorTheme->visibility . "+"
-                    . $this->colorTheme->key . '"' . $propName . '"'
-                    . $this->colorTheme->punctuation . ": ";
+                    . $colorTheme->visibility . "+"
+                    . $colorTheme->key . '"' . $propName . '"'
+                    . $colorTheme->punctuation . ": ";
             }
 
-            $output .= $this->formatVariable($config, $propValue, $depth + 1, $indent . "  ")
+            $output .= $this->formatVariable(
+                    $config, $colorTheme, $propValue, $depth + 1, $indent . "  "
+                )
                 . PHP_EOL;
         }
 
-        return $output . $indent . $this->colorTheme->punctuation . "}";
+        return $output . $indent . $colorTheme->punctuation . "}";
     }
 
     private function calculateFilePathWithoutProjectRootPath(VariableDebugConfig $config, string $filePath): string

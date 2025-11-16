@@ -77,6 +77,14 @@ class VariableDebugConfig
     }
 
     /**
+     * @return VariableDebugCliColorTheme
+     */
+    public function resolveCliThemeOrDefault(): VariableDebugCliColorTheme
+    {
+        return $this->cliTheme ?? VariableDebugCliColorTheme::noColor();
+    }
+
+    /**
      * @param ?VariableDebugConfig $config
      * @return VariableDebugConfig
      */
