@@ -2,6 +2,8 @@
 
 namespace lightla\VariableDebugger\Config;
 
+use lightla\VariableDebugger\DebugStrategy\VariableDebugCliColorTheme;
+
 class VariableDebugConfigurator
 {
     protected string $projectRootPath = '';
@@ -9,6 +11,7 @@ class VariableDebugConfigurator
     protected ?VariableDebugConfigArrayShowMode $showArrayMode = null;
     protected ?bool $showValueType = null;
     protected ?bool $showDetailAccessModifiers = null;
+    protected ?VariableDebugCliColorTheme $cliTheme = null;
 
     public function withProjectRootPath(string $projectRootPath): self
     {
@@ -41,6 +44,34 @@ class VariableDebugConfigurator
     public function withShowDetailAccessModifiers(bool $showDetailAccessModifiers): self
     {
         $this->showDetailAccessModifiers = $showDetailAccessModifiers;
+
+        return $this;
+    }
+
+    public function useCliThemeDark(): self
+    {
+        $this->cliTheme = VariableDebugCliColorTheme::dark();
+
+        return $this;
+    }
+
+    public function useCliThemeLight(): self
+    {
+        $this->cliTheme = VariableDebugCliColorTheme::light();
+
+        return $this;
+    }
+
+    public function useCliThemeNoColor(): self
+    {
+        $this->cliTheme = VariableDebugCliColorTheme::noColor();
+
+        return $this;
+    }
+
+    public function useWebThemeDark(): self
+    {
+        # Comming soon ^^ (always dark)
 
         return $this;
     }

@@ -4,6 +4,7 @@ namespace lightla\VariableDebugger;
 
 use lightla\VariableDebugger\Config\VariableDebugConfigArrayShowMode;
 use lightla\VariableDebugger\Config\VariableDebugConfigBuilder;
+use lightla\VariableDebugger\DebugStrategy\VariableDebugCliColorTheme;
 
 class VariableDebugConfig
 {
@@ -15,6 +16,7 @@ class VariableDebugConfig
         private ?VariableDebugConfigArrayShowMode $showArrayMode = null,
         private ?bool $showValueType = null,
         private ?bool $showDetailAccessModifiers = null,
+        private ?VariableDebugCliColorTheme $cliTheme = null,
     )
     {
     }
@@ -67,6 +69,14 @@ class VariableDebugConfig
     }
 
     /**
+     * @return VariableDebugCliColorTheme|null
+     */
+    public function getCliTheme(): ?VariableDebugCliColorTheme
+    {
+        return $this->cliTheme;
+    }
+
+    /**
      * @param ?VariableDebugConfig $config
      * @return VariableDebugConfig
      */
@@ -77,7 +87,8 @@ class VariableDebugConfig
             $this->maxDepth ?? $config?->getMaxDepth(),
             $this->showArrayMode ?? $config?->getShowArrayMode(),
             $this->showValueType ?? $config?->getShowValueType(),
-            $this->showDetailAccessModifiers ?? $config?->getShowDetailAccessModifiers()
+            $this->showDetailAccessModifiers ?? $config?->getShowDetailAccessModifiers(),
+            $this->cliTheme ?? $config?->getCliTheme(),
         );
     }
 }

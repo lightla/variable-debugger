@@ -19,6 +19,7 @@ class VariableDebugConfigGlobalPendingBuilder extends VariableDebugConfigurator
             $this->showArrayMode,
             $this->showValueType,
             $this->showDetailAccessModifiers,
+            $this->cliTheme
         );
     }
 
