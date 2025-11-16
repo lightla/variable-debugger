@@ -1,5 +1,5 @@
 {
-  "name": "lightsouler/lightla-variable-debugger",
+  "name": "lightla/variable-debugger",
   "description": "A lightweight PHP variable debugger",
   "type": "library",
   "license": "MIT",
