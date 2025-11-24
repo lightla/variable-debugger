@@ -12,7 +12,7 @@ class VariableDebugConfig
 
     private const DEFAULT_MAX_DEPTH = 10;
     private const DEFAULT_SHOW_ARRAY_MODE = VariableDebugConfigArrayShowMode::SHOW_ALL_ELEMENT;
-    private const DEFAULT_MAX_LINE = 50;
+    private const DEFAULT_MAX_LINE = 200;
 
     public function __construct(
         private ?string $projectRootPath = '',

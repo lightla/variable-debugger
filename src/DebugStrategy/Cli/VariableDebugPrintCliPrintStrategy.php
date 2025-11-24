@@ -27,12 +27,13 @@ class VariableDebugPrintCliPrintStrategy implements VariableDebugPrintStrategy
             $colorTheme->lineNumber . $line;
         $outputLines[] = $colorTheme->punctuation . str_repeat('·', 5);
 
+        $lineCount = 0;
         foreach ($vars as $i => $var) {
             if ($i > 0) {
                 $outputLines[] = $colorTheme->punctuation . $this->strVarSeparatorLine();
             }
 
-            $formattedVar = $this->formatVariable($config, $colorTheme, $var);
+            $formattedVar = $this->formatVariable($config, $colorTheme, $var, 0, '', $lineCount);
             $lines = explode(PHP_EOL, $formattedVar);
             foreach ($lines as $lineContent) {
                 $outputLines[] = $lineContent;
@@ -59,20 +60,26 @@ class VariableDebugPrintCliPrintStrategy implements VariableDebugPrintStrategy
         VariableDebugCliColorTheme $colorTheme,
         mixed $var,
         int $depth = 0,
-        string $indent = ''
+        string $indent = '',
+        int &$lineCount = 0
     ): string {
         $maxDepth = $config->resolveMaxDepthOrDefault();
+        $maxLine = $config->resolveMaxLineOrDefault();
+
+        if ($lineCount >= $maxLine) {
+            return $colorTheme->comment . '[Output Truncated]';
+        }
 
         if ($depth > $maxDepth) {
             return $colorTheme->comment . '[Max Depth Reached]';
         }
 
         if (is_array($var)) {
-            return $this->formatArray($config, $colorTheme, $var, $depth, $indent);
+            return $this->formatArray($config, $colorTheme, $var, $depth, $indent, $lineCount);
         }
 
         if (is_object($var)) {
-            return $this->formatObject($config, $colorTheme, $var, $depth, $indent);
+            return $this->formatObject($config, $colorTheme, $var, $depth, $indent, $lineCount);
         }
 
         $output = '';
@@ -141,10 +148,12 @@ class VariableDebugPrintCliPrintStrategy implements VariableDebugPrintStrategy
         VariableDebugCliColorTheme $colorTheme,
         array $var,
         int $depth,
-        string $indent): string
-    {
+        string $indent,
+        int &$lineCount
+    ): string {
         $count = count($var);
         $output = '';
+        $maxLine = $config->resolveMaxLineOrDefault();
 
         if ($config->getShowValueType()) {
             $output .= $colorTheme->type . "array" . $colorTheme->punctuation
@@ -156,16 +165,22 @@ class VariableDebugPrintCliPrintStrategy implements VariableDebugPrintStrategy
         }
 
         $output .= $colorTheme->punctuation . "[" . PHP_EOL;
+        $lineCount++;
 
         $newIndent = $indent . "  ";
         $i = 0;
 
         $showFirst = (
             $config->resolveShowArrayModeOrDefault()->isShowFirstElement()
-            && $depth === 0
         );
 
         foreach ($var as $key => $value) {
+            if ($lineCount >= $maxLine) {
+                $remaining = $count - $i;
+                $output .= $newIndent . $colorTheme->comment . "... (and {$remaining} hidden due to line limit)" . PHP_EOL;
+                break;
+            }
+
             $output .= $newIndent;
 
             if (is_string($key)) {
@@ -177,7 +192,7 @@ class VariableDebugPrintCliPrintStrategy implements VariableDebugPrintStrategy
             }
 
             $output .= $this->formatVariable(
-                $config, $colorTheme, $value, $depth + 1, $newIndent
+                $config, $colorTheme, $value, $depth + 1, $newIndent, $lineCount
             );
 
             if ($i < $count - 1) {
@@ -185,12 +200,15 @@ class VariableDebugPrintCliPrintStrategy implements VariableDebugPrintStrategy
             }
 
             $output .= PHP_EOL;
+            $lineCount++;
             $i++;
 
             if ($showFirst && $count > 1) {
+                $remaining = $count - $i;
                 $output .= $newIndent . $colorTheme->comment
-                    . "... (and " . ($count - 1) . " others)"
+                    . "... (and {$remaining} others)"
                     . PHP_EOL;
+                $lineCount++;
                 break;
             }
         }
@@ -203,90 +221,100 @@ class VariableDebugPrintCliPrintStrategy implements VariableDebugPrintStrategy
         VariableDebugCliColorTheme $colorTheme,
         object $var,
         int $depth,
-        string $indent): string
-    {
+        string $indent,
+        int &$lineCount
+    ): string {
         $ref = new \ReflectionClass($var);
         $className = $ref->getName();
+        $maxLine = $config->resolveMaxLineOrDefault();
 
         $output = '';
 
-        // object(ClassName) {
         if ($config->getShowValueType()) {
             $output .= $colorTheme->type . "object" . $colorTheme->punctuation
                 . "(" . $colorTheme->className . $className . $colorTheme->punctuation . ") "
                 . $colorTheme->punctuation . "{" . PHP_EOL;
         } else {
-            // className {
             $output .= $colorTheme->className . $className . " "
                 . $colorTheme->punctuation . "{" . PHP_EOL;
         }
+        $lineCount++;
 
-        // Gather ALL declared properties (includes inherited)
-        $allProperties = [];
+        $objectVars = get_object_vars($var);
+        $hasAnyProperty = false;
+
+        // Loop qua class hierarchy và print trực tiếp
         $current = $ref;
+        $printedProps = [];
 
         while ($current) {
-            foreach ($current->getProperties() as $p) {
-                $name = $p->getName();
-                if (!isset($allProperties[$name])) {
-                    $allProperties[$name] = $p;
-                }
+            if ($lineCount >= $maxLine) {
+                $output .= $indent . "  " . $colorTheme->comment . "... (truncated)" . PHP_EOL;
+                return $output . $indent . $colorTheme->punctuation . "}";
             }
+
+            foreach ($current->getProperties() as $prop) {
+                $propName = $prop->getName();
+                if (isset($printedProps[$propName])) {
+                    continue;
+                }
+                $printedProps[$propName] = true;
+                $hasAnyProperty = true;
+
+                if ($lineCount >= $maxLine) {
+                    $output .= $indent . "  " . $colorTheme->comment . "... (truncated)" . PHP_EOL;
+                    return $output . $indent . $colorTheme->punctuation . "}";
+                }
+
+                $prop->setAccessible(true);
+
+                if ($config->getShowDetailAccessModifiers()) {
+                    $visibility = $prop->isPrivate() ? "private"
+                        : ($prop->isProtected() ? "protected" : "public");
+
+                    $output .= $indent . "  "
+                        . $colorTheme->visibility . $visibility . " "
+                        . $colorTheme->key . $prop->getName()
+                        . $colorTheme->punctuation . ": ";
+                } else {
+                    $visibility = $prop->isPrivate() ? "-"
+                        : ($prop->isProtected() ? "#" : "+");
+
+                    $output .= $indent . "  "
+                        . $colorTheme->visibility . $visibility . " "
+                        . $colorTheme->key . $prop->getName()
+                        . $colorTheme->punctuation . ": ";
+                }
+
+                if (!$prop->isInitialized($var)) {
+                    $output .= $colorTheme->comment . "[uninitialized]" . PHP_EOL;
+                } else {
+                    try {
+                        $value = $prop->getValue($var);
+                        $output .= $this->formatVariable(
+                                $config, $colorTheme, $value, $depth + 1, $indent . "  ", $lineCount
+                            )
+                            . PHP_EOL;
+                    } catch (\Throwable $e) {
+                        $output .= $colorTheme->error . "Error: " . $e->getMessage() . PHP_EOL;
+                    }
+                }
+                $lineCount++;
+            }
+
             $current = $current->getParentClass();
         }
 
-        // Dynamic (stdClass or magic)
-        $objectVars = get_object_vars($var);
-
-        if (empty($allProperties) && empty($objectVars)) {
-            return $output . $indent . "  "
-                . $colorTheme->comment . "# No properties" . PHP_EOL
-                . $indent . $colorTheme->punctuation . "}";
-        }
-
-        // ===== DECLARED PROPERTIES =====
-        foreach ($allProperties as $prop) {
-            $prop->setAccessible(true);
-
-            if ($config->getShowDetailAccessModifiers()) {
-                $visibility = $prop->isPrivate() ? "private"
-                    : ($prop->isProtected() ? "protected" : "public");
-
-                $output .= $indent . "  "
-                    . $colorTheme->visibility . $visibility . " "
-                    . $colorTheme->key . $prop->getName()
-                    . $colorTheme->punctuation . ": ";
-            } else {
-                $visibility = $prop->isPrivate() ? "-"
-                    : ($prop->isProtected() ? "#" : "+");
-
-                $output .= $indent . "  "
-                    . $colorTheme->visibility . $visibility . " "
-                    . $colorTheme->key . $prop->getName()
-                    . $colorTheme->punctuation . ": ";
-            }
-
-            // VALUE
-            if (!$prop->isInitialized($var)) {
-                $output .= $colorTheme->comment . "[uninitialized]" . PHP_EOL;
-            } else {
-                try {
-                    $value = $prop->getValue($var);
-                    $output .= $this->formatVariable(
-                            $config, $colorTheme, $value, $depth + 1, $indent . "  "
-                        )
-                        . PHP_EOL;
-                } catch (\Throwable $e) {
-                    $output .= $colorTheme->error . "Error: " . $e->getMessage() . PHP_EOL;
-                }
-            }
-        }
-
-        // ===== DYNAMIC PROPERTIES =====
+        // Dynamic properties
         foreach ($objectVars as $propName => $propValue) {
-            // Skip if already declared
-            if (isset($allProperties[$propName])) {
+            if (isset($printedProps[$propName])) {
                 continue;
+            }
+            $hasAnyProperty = true;
+
+            if ($lineCount >= $maxLine) {
+                $output .= $indent . "  " . $colorTheme->comment . "... (truncated)" . PHP_EOL;
+                return $output . $indent . $colorTheme->punctuation . "}";
             }
 
             if ($config->getShowDetailAccessModifiers()) {
@@ -302,9 +330,15 @@ class VariableDebugPrintCliPrintStrategy implements VariableDebugPrintStrategy
             }
 
             $output .= $this->formatVariable(
-                    $config, $colorTheme, $propValue, $depth + 1, $indent . "  "
+                    $config, $colorTheme, $propValue, $depth + 1, $indent . "  ", $lineCount
                 )
                 . PHP_EOL;
+            $lineCount++;
+        }
+
+        if (!$hasAnyProperty) {
+            $output .= $indent . "  " . $colorTheme->comment . "# No properties" . PHP_EOL;
+            $lineCount++;
         }
 
         return $output . $indent . $colorTheme->punctuation . "}";

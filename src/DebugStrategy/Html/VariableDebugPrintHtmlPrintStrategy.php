@@ -24,10 +24,11 @@ class VariableDebugPrintHtmlPrintStrategy implements VariableDebugPrintStrategy
         echo "<strong>📁/</strong>{$file}:{$line}<br>";
         echo '</div>';
 
+        $lineCount = 0;
         foreach ($vars as $var) {
             echo '<div style="margin:10px 0;padding:10px;border:1px solid #444;border-radius:3px;">';
             echo '<pre style="margin:0;font-family:inherit;white-space:pre-wrap;">';
-            echo $this->formatVariable($config, $var);
+            echo $this->formatVariable($config, $var, 0, '', $lineCount);
             echo '</pre>';
             echo '</div>';
         }
@@ -38,13 +39,17 @@ class VariableDebugPrintHtmlPrintStrategy implements VariableDebugPrintStrategy
         VariableDebugConfig $config,
         $var,
         $depth = 0,
-        $indent = ''
+        $indent = '',
+        int &$lineCount = 0
     ): string
     {
         $output = '';
-
-        # Prevent infinite recursion
         $maxDepth = $config->resolveMaxDepthOrDefault();
+        $maxLine = $config->resolveMaxLineOrDefault();
+
+        if ($lineCount >= $maxLine) {
+            return '<span style="color:#808080;">[Output Truncated]</span>';
+        }
 
         if ($depth >= $maxDepth) {
             return '<span style="color:#808080;">[Max Depth Reached]</span>';
@@ -60,6 +65,7 @@ class VariableDebugPrintHtmlPrintStrategy implements VariableDebugPrintStrategy
                 $output .= '<span style="color:#808080;">[]</span>';
             } else {
                 $output .= '[<br>';
+                $lineCount++;
                 $i = 0;
 
                 $showFirstArrayElement = (
@@ -68,6 +74,12 @@ class VariableDebugPrintHtmlPrintStrategy implements VariableDebugPrintStrategy
                 );
 
                 foreach ($var as $key => $value) {
+                    if ($lineCount >= $maxLine) {
+                        $remaining = $count - $i;
+                        $output .= $indent . '  <span style="color:#808080;">... (and ' . $remaining . ' hidden due to line limit)</span><br>';
+                        break;
+                    }
+
                     $newIndent = $indent . '  ';
                     $output .= $newIndent;
 
@@ -78,19 +90,20 @@ class VariableDebugPrintHtmlPrintStrategy implements VariableDebugPrintStrategy
                     }
 
                     $output .= ' <span style="color:#d4d4d4;">=></span> ';
-                    $output .= $this->formatVariable($config, $value, $depth + 1, $newIndent);
+                    $output .= $this->formatVariable($config, $value, $depth + 1, $newIndent, $lineCount);
 
                     if ($i < $count - 1) {
                         $output .= '<span style="color:#d4d4d4;">,</span>';
                     }
                     $output .= '<br>';
+                    $lineCount++;
                     $i++;
 
-                    // Nếu SHOW_FIRST mode và đây là level đầu, chỉ show 1 phần tử
                     if ($showFirstArrayElement) {
                         if ($count > 1) {
-                            $othersCount = $count - 1;
+                            $othersCount = $count - $i;
                             $output .= $newIndent . "<span style='color:#808080;'>... (and {$othersCount} others)</span><br>";
+                            $lineCount++;
                         }
                         break;
                     }
@@ -102,39 +115,38 @@ class VariableDebugPrintHtmlPrintStrategy implements VariableDebugPrintStrategy
             $className = $reflection->getName();
 
             if ($config->getShowValueType()) {
-                // Hiển thị như cũ: object(ClassName) {
                 $output .= '<span style="color:#4ec9b0;">object</span>(<span style="color:#c586c0;">' . htmlspecialchars($className) . '</span>) {<br>';
             } else {
-                // Đơn giản hóa
-                if ($className === 'stdClass') {
-//                    $output .= '{<br>';  // stdClass chỉ hiển thị {}
-                    $output .= '<span style="color:#c586c0;">' . htmlspecialchars($className) . '</span> {<br>';
-                } else {
-                    $output .= '<span style="color:#c586c0;">' . htmlspecialchars($className) . '</span> {<br>';  // ClassName {}
-                }
+                $output .= '<span style="color:#c586c0;">' . htmlspecialchars($className) . '</span> {<br>';
             }
+            $lineCount++;
 
-            // Get all properties including inherited ones
-            $allProperties = [];
-            $currentClass = $reflection;
-            while ($currentClass) {
-                foreach ($currentClass->getProperties() as $prop) {
-                    $propName = $prop->getName();
-                    if (!isset($allProperties[$propName])) {
-                        $allProperties[$propName] = $prop;
-                    }
-                }
-                $currentClass = $currentClass->getParentClass();
-            }
-
-            // Get dynamic properties (for stdClass and other objects)
             $objectVars = get_object_vars($var);
+            $hasAnyProperty = false;
 
-            if (empty($allProperties) && empty($objectVars)) {
-                $output .= $indent . '  <span style="color:#808080;"># No properties</span><br>';
-            } else {
-                // Show declared properties first
-                foreach ($allProperties as $prop) {
+            // Loop qua class hierarchy và print trực tiếp
+            $current = $reflection;
+            $printedProps = [];
+
+            while ($current) {
+                if ($lineCount >= $maxLine) {
+                    $output .= $indent . '  <span style="color:#808080;">... (truncated)</span><br>';
+                    return $output . $indent . '}';
+                }
+
+                foreach ($current->getProperties() as $prop) {
+                    $propName = $prop->getName();
+                    if (isset($printedProps[$propName])) {
+                        continue;
+                    }
+                    $printedProps[$propName] = true;
+                    $hasAnyProperty = true;
+
+                    if ($lineCount >= $maxLine) {
+                        $output .= $indent . '  <span style="color:#808080;">... (truncated)</span><br>';
+                        return $output . $indent . '}';
+                    }
+
                     $prop->setAccessible(true);
 
                     if ($config->getShowDetailAccessModifiers()) {
@@ -152,31 +164,48 @@ class VariableDebugPrintHtmlPrintStrategy implements VariableDebugPrintStrategy
                             $output .= '<span style="color:#808080;">[uninitialized]</span>';
                         } else {
                             $propValue = $prop->getValue($var);
-                            $output .= $this->formatVariable($config, $propValue, $depth + 1, $indent . '  ');
+                            $output .= $this->formatVariable($config, $propValue, $depth + 1, $indent . '  ', $lineCount);
                         }
                     } catch (\Exception $e) {
                         $output .= '<span style="color:#ff6b6b;">Error: ' . htmlspecialchars($e->getMessage()) . '</span>';
                     }
 
                     $output .= '<br>';
+                    $lineCount++;
                 }
 
-                // Show dynamic properties (for stdClass)
-                foreach ($objectVars as $propName => $propValue) {
-                    // Skip if already shown as declared property
-                    if (!isset($allProperties[$propName])) {
-                        if ($config->getShowDetailAccessModifiers()) {
-                            $output .= $indent . '  <span style="color:#c586c0;">public</span> ';
-                            $output .= '<span style="color:#9cdcfe;">"' . htmlspecialchars($propName) . '"</span>: ';
-                        } else {
-                            $output .= $indent . '  <span style="color:#c586c0;">+</span>';
-                            $output .= '<span style="color:#9cdcfe;">"' . htmlspecialchars($propName) . '"</span>: ';
-                        }
-                        $output .= $this->formatVariable($config, $propValue, $depth + 1, $indent . '  ');
-                        $output .= '<br>';
-                    }
-                }
+                $current = $current->getParentClass();
             }
+
+            // Dynamic properties
+            foreach ($objectVars as $propName => $propValue) {
+                if (isset($printedProps[$propName])) {
+                    continue;
+                }
+                $hasAnyProperty = true;
+
+                if ($lineCount >= $maxLine) {
+                    $output .= $indent . '  <span style="color:#808080;">... (truncated)</span><br>';
+                    return $output . $indent . '}';
+                }
+
+                if ($config->getShowDetailAccessModifiers()) {
+                    $output .= $indent . '  <span style="color:#c586c0;">public</span> ';
+                    $output .= '<span style="color:#9cdcfe;">"' . htmlspecialchars($propName) . '"</span>: ';
+                } else {
+                    $output .= $indent . '  <span style="color:#c586c0;">+</span>';
+                    $output .= '<span style="color:#9cdcfe;">"' . htmlspecialchars($propName) . '"</span>: ';
+                }
+                $output .= $this->formatVariable($config, $propValue, $depth + 1, $indent . '  ', $lineCount);
+                $output .= '<br>';
+                $lineCount++;
+            }
+
+            if (!$hasAnyProperty) {
+                $output .= $indent . '  <span style="color:#808080;"># No properties</span><br>';
+                $lineCount++;
+            }
+
             $output .= $indent . '}';
         } elseif (is_string($var)) {
             $len = strlen($var);
@@ -214,11 +243,6 @@ class VariableDebugPrintHtmlPrintStrategy implements VariableDebugPrintStrategy
         return $output;
     }
 
-    /**
-     * @param VariableDebugConfig $config
-     * @param string $filePath
-     * @return string
-     */
     private function calculateFilePathWithoutProjectRootPath(
         VariableDebugConfig $config,
         string $filePath
