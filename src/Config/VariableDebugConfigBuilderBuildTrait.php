@@ -11,6 +11,7 @@ trait VariableDebugConfigBuilderBuildTrait
         return new VariableDebugConfig(
             $this->projectRootPath,
             $this->maxDepth,
+            $this->maxLine,
             $this->showArrayMode,
             $this->showValueType,
             $this->showDetailAccessModifiers,

@@ -8,6 +8,7 @@ class VariableDebugConfigurator
 {
     protected string $projectRootPath = '';
     protected ?int $maxDepth = null;
+    protected ?int $maxLine = null;
     protected ?VariableDebugConfigArrayShowMode $showArrayMode = null;
     protected ?bool $showValueType = null;
     protected ?bool $showDetailAccessModifiers = null;

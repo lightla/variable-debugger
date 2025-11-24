@@ -63,7 +63,7 @@ class VariableDebugPrintHtmlPrintStrategy implements VariableDebugPrintStrategy
                 $i = 0;
 
                 $showFirstArrayElement = (
-                    $config->resolveShowArrayMode()->isShowFirstElement()
+                    $config->resolveShowArrayModeOrDefault()->isShowFirstElement()
                     && $depth === 0
                 );
 

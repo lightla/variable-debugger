@@ -12,10 +12,12 @@ class VariableDebugConfig
 
     private const DEFAULT_MAX_DEPTH = 10;
     private const DEFAULT_SHOW_ARRAY_MODE = VariableDebugConfigArrayShowMode::SHOW_ALL_ELEMENT;
+    private const DEFAULT_MAX_LINE = 50;
 
     public function __construct(
         private ?string $projectRootPath = '',
-        private ?int $maxDepth = 10,
+        private ?int $maxDepth = null,
+        private ?int $maxLine = null,
         private ?VariableDebugConfigArrayShowMode $showArrayMode = null,
         private ?bool $showValueType = null,
         private ?bool $showDetailAccessModifiers = null,
@@ -54,6 +56,14 @@ class VariableDebugConfig
     public function getMaxDepth(): ?int
     {
         return $this->maxDepth;
+    }
+
+    /**
+     * @return int|null
+     */
+    public function getMaxLine(): ?int
+    {
+        return $this->maxLine;
     }
 
     public function getShowArrayMode(): ?VariableDebugConfigArrayShowMode
@@ -96,9 +106,17 @@ class VariableDebugConfig
     }
 
     /**
+     * @return int
+     */
+    public function resolveMaxLineOrDefault(): int
+    {
+        return $this->maxLine ?? self::DEFAULT_MAX_LINE;
+    }
+
+    /**
      * @return VariableDebugConfigArrayShowMode
      */
-    public function resolveShowArrayMode(): VariableDebugConfigArrayShowMode
+    public function resolveShowArrayModeOrDefault(): VariableDebugConfigArrayShowMode
     {
         return $this->showArrayMode ?? self::DEFAULT_SHOW_ARRAY_MODE;
     }
@@ -112,6 +130,7 @@ class VariableDebugConfig
         return new VariableDebugConfig(
             $this->projectRootPath ?? $config?->getProjectRootPath(),
             $this->maxDepth ?? $config?->getMaxDepth(),
+            $this->maxLine ?? $config?->getMaxLine(),
             $this->showArrayMode ?? $config?->getShowArrayMode(),
             $this->showValueType ?? $config?->getShowValueType(),
             $this->showDetailAccessModifiers ?? $config?->getShowDetailAccessModifiers(),
