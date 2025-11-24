@@ -2,100 +2,80 @@
 
 namespace lightla\VariableDebugger;
 
-use lightla\VariableDebugger\Config\VariableDebugConfigArrayShowMode;
+use lightla\VariableDebugger\Config\VariableDebugConfigBuilder;
 
 class VariablePendingDebug
 {
+    private ?VariableDebugConfig $variableDebugConfig = null;
+
     public function __construct(
         private array $backtrace,
         private VariableDebugger $variableDebugger,
         private readonly \Closure $pendingDebugAction,
+        private ?VariableDebugConfigBuilder $variableDebugConfigBuilder = null,
     )
     {
-
+        if (! $this->variableDebugConfigBuilder) {
+            $this->variableDebugConfigBuilder = VariableDebugConfig::builder();
+        }
     }
 
     public function __destruct()
     {
-        ($this->pendingDebugAction)($this->backtrace);
+        $this->variableDebugger->setConfig(
+        $this->variableDebugConfig ?:
+            $this->variableDebugConfigBuilder->build()
+                ->merge(VariableDebugConfig::getGlobalConfig())
+        );
+
+        ($this->pendingDebugAction)($this->backtrace, $this->variableDebugger);
     }
 
     public function on(VariableDebugConfig $config): void
     {
-        $this->variableDebugger->setConfig(
-            $config->merge(VariableDebugConfig::getGlobalConfig())
-        );
+        $this->variableDebugConfig = $config;
     }
 
     public function onShort(?int $maxDepth = null, ?bool $showArrayOnlyFirstElement = null): static
     {
-        $this->variableDebugger->setConfig(
-            VariableDebugConfig::builder()
-                ->configShort($maxDepth, $showArrayOnlyFirstElement)
-                ->build()
-                ->merge(VariableDebugConfig::getGlobalConfig())
-        );
-
-        return $this;
-    }
-
-    public function includeClassPropertiesForLaravelModel(): static
-    {
-        $this->variableDebugger->setConfig(
-            VariableDebugConfig::builder()
-                ->withClassPropertiesForLaravel()
-                ->build()
-                ->merge($this->variableDebugger->getConfig())
-        );
+        $this->variableDebugConfigBuilder->configShort($maxDepth, $showArrayOnlyFirstElement);
 
         return $this;
     }
 
     public function onFull(?int $maxDepth = null, bool $showArrayOnlyFirstElement = false): static
     {
-        $this->variableDebugger->setConfig(
-            VariableDebugConfig::builder()
-                ->configFull($maxDepth, $showArrayOnlyFirstElement)
-                ->build()
-                ->merge(VariableDebugConfig::getGlobalConfig())
-        );
+        $this->variableDebugConfigBuilder->configFull($maxDepth, $showArrayOnlyFirstElement);
 
         return $this;
     }
 
     public function showKeyOnly(?bool $showKeyOnly, ?array $ignoredShowKeyProperties = null): static
     {
-        $this->variableDebugger->setConfig(
-            VariableDebugConfig::builder()
-                ->withShowKeyOnly($showKeyOnly)
-                ->withIgnoredShowKeyProperties($ignoredShowKeyProperties)
-                ->build()
-                ->merge($this->variableDebugger->getConfig())
-        );
+        $this->variableDebugConfigBuilder
+            ->withShowKeyOnly($showKeyOnly)
+            ->withIgnoredShowKeyProperties($ignoredShowKeyProperties);
 
         return $this;
     }
 
     public function includeProperties(array $properties): static
     {
-        $this->variableDebugger->setConfig(
-            VariableDebugConfig::builder()
-                ->withProperties($properties)
-                ->build()
-                ->merge($this->variableDebugger->getConfig())
-        );
+        $this->variableDebugConfigBuilder->withProperties($properties);
+
+        return $this;
+    }
+
+    public function includeClassPropertiesForLaravelModel(): static
+    {
+        $this->variableDebugConfigBuilder->withClassPropertiesForLaravel();
 
         return $this;
     }
 
     public function excludeProperties(array $properties): static
     {
-        $this->variableDebugger->setConfig(
-            VariableDebugConfig::builder()
-                ->withoutProperties($properties)
-                ->build()
-                ->merge($this->variableDebugger->getConfig())
-        );
+        $this->variableDebugConfigBuilder->withoutProperties($properties);
 
         return $this;
     }
