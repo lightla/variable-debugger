@@ -17,6 +17,7 @@ class VariableDebugConfigurator
     protected ?array $ignoredShowKeyProperties = null;
     protected ?array $includedProperties = null;
     protected ?array $excludedProperties = null;
+    private ?array $includedClassProperties = null;
 
     /**
      * @param int|null $maxDepth
@@ -114,6 +115,13 @@ class VariableDebugConfigurator
     public function withoutProperties(?array $withoutProperties): self
     {
         $this->excludedProperties = $withoutProperties;
+
+        return $this;
+    }
+
+    public function withClassProperties(string $className, array $properties): self
+    {
+        $this->includedClassProperties[$className] = $properties;
 
         return $this;
     }

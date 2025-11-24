@@ -27,6 +27,7 @@ class VariableDebugConfig
         private ?VariableDebugCliColorTheme $cliTheme = null,
         private ?array $includedProperties = [],
         private ?array $excludedProperties = [],
+        private ?array $includedClassProperties = [],
     )
     {
     }
@@ -119,6 +120,14 @@ class VariableDebugConfig
     }
 
     /**
+     * @return array|null
+     */
+    public function getIncludedClassProperties(): ?array
+    {
+        return $this->includedClassProperties;
+    }
+
+    /**
      * @return VariableDebugCliColorTheme|null
      */
     public function getCliTheme(): ?VariableDebugCliColorTheme
@@ -183,6 +192,14 @@ class VariableDebugConfig
     }
 
     /**
+     * @return array
+     */
+    public function resolveIncludedClassPropertiesOrDefault(): array
+    {
+        return $this->includedClassProperties ?? [];
+    }
+
+    /**
      * @return VariableDebugConfigArrayShowMode
      */
     public function resolveShowArrayModeOrDefault(): VariableDebugConfigArrayShowMode
@@ -207,7 +224,8 @@ class VariableDebugConfig
             $this->ignoredShowKeyProperties ?? $config?->getIgnoredShowKeyProperties(),
             $this->cliTheme ?? $config?->getCliTheme(),
             $this->includedProperties ?? $config?->getIncludedProperties(),
-            $this->excludedProperties ?? $config?->getExcludedProperties()
+            $this->excludedProperties ?? $config?->getExcludedProperties(),
+            $this->includedClassProperties ?? $config?->getIncludedClassProperties(),
         );
     }
 }
