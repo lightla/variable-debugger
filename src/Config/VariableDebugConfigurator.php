@@ -13,7 +13,7 @@ class VariableDebugConfigurator
     protected ?bool $showValueType = null;
     protected ?bool $showDetailAccessModifiers = null;
     protected ?VariableDebugCliColorTheme $cliTheme = null;
-    protected ?array $showKeyOnly = null;
+    protected ?bool $showKeyOnly = null;
     protected ?array $includedProperties = null;
     protected ?array $excludedProperties = null;
 

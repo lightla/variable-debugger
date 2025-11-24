@@ -29,7 +29,6 @@ class VariablePendingDebug
 
     public function onShort(?int $maxDepth = null, ?bool $showArrayOnlyFirstElement = null): static
     {
-        dd(111);
         $this->variableDebugger->setConfig(
             VariableDebugConfig::builder()
                 ->configShort($maxDepth, $showArrayOnlyFirstElement)
@@ -37,12 +36,10 @@ class VariablePendingDebug
                 ->merge(VariableDebugConfig::getGlobalConfig())
         );
 
-
-
         return $this;
     }
 
-    public function onFull(?int $maxDepth = null, bool $showArrayOnlyFirstElement = false): void
+    public function onFull(?int $maxDepth = null, bool $showArrayOnlyFirstElement = false): static
     {
         $this->variableDebugger->setConfig(
             VariableDebugConfig::builder()
@@ -50,19 +47,18 @@ class VariablePendingDebug
                 ->build()
                 ->merge(VariableDebugConfig::getGlobalConfig())
         );
+
+        return $this;
     }
 
     public function showKeyOnly(?bool $showKeyOnly): static
     {
-        dd(1);
         $this->variableDebugger->setConfig(
             VariableDebugConfig::builder()
                 ->withShowKeyOnly($showKeyOnly)
                 ->build()
                 ->merge($this->variableDebugger->getConfig())
         );
-
-        dd($this->variableDebugger->getConfig());
 
         return $this;
     }
