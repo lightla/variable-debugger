@@ -200,6 +200,14 @@ class VariableDebugConfig
     }
 
     /**
+     * @return array
+     */
+    public function resolveExcludedClassPropertiesOrDefault(): array
+    {
+        return [];
+    }
+
+    /**
      * @return VariableDebugConfigArrayShowMode
      */
     public function resolveShowArrayModeOrDefault(): VariableDebugConfigArrayShowMode

@@ -39,45 +39,14 @@ class VariablePendingDebug
         return $this;
     }
 
-    public function forLaravelModel(): static
+    public function includeClassPropertiesForLaravelModel(): static
     {
-        $this->includeProperties([
-            'connection',
-            'table',
-            'primaryKey',
-            'keyType',
-            'incrementing',
-            'with',
-            'withCount',
-            'preventsLazyLoading',
-            'perPage',
-            'exists',
-            'wasRecentlyCreated',
-            'escapeWhenCastingToString',
-            'attributes',
-            'original',
-            'changes',
-            'previous',
-            'casts',
-            'classCastCache',
-            'attributeCastCache',
-            'dateFormat',
-            'appends',
-            'dispatchesEvents',
-            'observables',
-            'relations',
-            'touches',
-            'relationAutoloadCallback',
-            'relationAutoloadContext',
-            'timestamps',
-            'usesUniqueIds',
-            'hidden',
-            'visible',
-            'fillable',
-            'guarded',
-            'authPasswordName',
-            'rememberTokenName',
-        ]);
+        $this->variableDebugger->setConfig(
+            VariableDebugConfig::builder()
+                ->withClassPropertiesForLaravel()
+                ->build()
+                ->merge($this->variableDebugger->getConfig())
+        );
 
         return $this;
     }

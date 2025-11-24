@@ -8,7 +8,7 @@ use Illuminate\Support\ServiceProvider;
 use lightla\VariableDebugger\Exceptions\VariableDebugGracefulExitException;
 use Throwable;
 
-class VariableDebuggerServiceProvider extends ServiceProvider
+class VariableDebuggerLaravelServiceProvider extends ServiceProvider
 {
     public function boot()
     {

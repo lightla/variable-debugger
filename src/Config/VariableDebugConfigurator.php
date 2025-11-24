@@ -2,6 +2,7 @@
 
 namespace lightla\VariableDebugger\Config;
 
+use lightla\VariableDebugger\Adapters\Laravel\VariableDebugPropertyLaravel;
 use lightla\VariableDebugger\DebugStrategy\Cli\VariableDebugCliColorTheme;
 
 class VariableDebugConfigurator
@@ -17,8 +18,7 @@ class VariableDebugConfigurator
     protected ?array $ignoredShowKeyProperties = null;
     protected ?array $includedProperties = null;
     protected ?array $excludedProperties = null;
-    private ?array $includedClassProperties = null;
-
+    protected ?array $includedClassProperties = null;
     /**
      * @param int|null $maxDepth
      * @param bool $showArrayOnlyFirstElement
@@ -122,6 +122,14 @@ class VariableDebugConfigurator
     public function withClassProperties(string $className, array $properties): self
     {
         $this->includedClassProperties[$className] = $properties;
+
+        return $this;
+    }
+
+    public function withClassPropertiesForLaravel(): self
+    {
+        $this->includedClassProperties[\Illuminate\Database\Eloquent\Model::class]
+            = VariableDebugPropertyLaravel::getPropertiesForLaravelEloquentModel();
 
         return $this;
     }

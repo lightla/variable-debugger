@@ -248,8 +248,9 @@ class VariableDebugPrintCliPrintStrategy implements VariableDebugPrintStrategy
         $objectVars = get_object_vars($var);
         $hasAnyProperty = false;
 
-        $properties = $config->resolveIncludedPropertiesOrDefault();
-        $withoutProperties = $config->resolveExcludedPropertiesOrDefault();
+        // Resolve includes/excludes dựa trên class
+        list($properties, $withoutProperties) = $this->resolveIncludesForClass($var, $config);
+        
         $showKeyOnly = $config->resolveShowKeyOnlyOrDefault();
         $ignoredShowKeyPaths = $config->resolveIgnoredShowKeyPropertiesOrDefault();
 
@@ -438,6 +439,39 @@ class VariableDebugPrintCliPrintStrategy implements VariableDebugPrintStrategy
         }
 
         return $result;
+    }
+
+    /**
+     * Resolve includes/excludes cho object dựa trên class
+     */
+    private function resolveIncludesForClass(object $var, VariableDebugConfig $config): array
+    {
+        $classIncludes = $config->resolveIncludedClassPropertiesOrDefault();
+        $classExcludes = $config->resolveExcludedClassPropertiesOrDefault();
+        
+        // Tìm class-specific rule (check instanceof)
+        $specificIncludes = null;
+        $specificExcludes = null;
+        
+        foreach ($classIncludes as $className => $paths) {
+            if ($var instanceof $className) {
+                $specificIncludes = $paths;
+                break;
+            }
+        }
+        
+        foreach ($classExcludes as $className => $paths) {
+            if ($var instanceof $className) {
+                $specificExcludes = $paths;
+                break;
+            }
+        }
+        
+        // Ưu tiên class-specific, fallback về global
+        $includes = $specificIncludes ?? $config->resolveIncludedPropertiesOrDefault();
+        $excludes = $specificExcludes ?? $config->resolveExcludedPropertiesOrDefault();
+        
+        return [$includes, $excludes];
     }
 
     /**
