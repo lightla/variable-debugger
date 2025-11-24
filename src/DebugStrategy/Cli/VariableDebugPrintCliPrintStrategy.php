@@ -174,6 +174,7 @@ class VariableDebugPrintCliPrintStrategy implements VariableDebugPrintStrategy
 
         $showFirst = $config->resolveShowArrayModeOrDefault()->isShowFirstElement();
         $showKeyOnly = $config->resolveShowKeyOnlyOrDefault();
+        $ignoredShowKeyPaths = $config->resolveIgnoredShowKeyPropertiesOrDefault();
 
         foreach ($var as $key => $value) {
             if ($lineCount >= $maxLine) {
@@ -190,9 +191,9 @@ class VariableDebugPrintCliPrintStrategy implements VariableDebugPrintStrategy
                 $output .= $colorTheme->number . $key;
             }
 
-            if (!$showKeyOnly) {
+            $nextPath = $this->getNextPath($propertyPath, (string)$key);
+            if ($this->shouldShowValue($showKeyOnly, $ignoredShowKeyPaths, $nextPath)) {
                 $output .= $colorTheme->punctuation . " => ";
-                $nextPath = $this->getNextPath($propertyPath, (string)$key);
                 $output .= $this->formatVariable(
                     $config, $colorTheme, $value, $depth + 1, $newIndent, $lineCount, $nextPath
                 );
@@ -250,6 +251,7 @@ class VariableDebugPrintCliPrintStrategy implements VariableDebugPrintStrategy
         $properties = $config->resolveIncludedPropertiesOrDefault();
         $withoutProperties = $config->resolveExcludedPropertiesOrDefault();
         $showKeyOnly = $config->resolveShowKeyOnlyOrDefault();
+        $ignoredShowKeyPaths = $config->resolveIgnoredShowKeyPropertiesOrDefault();
 
         // Build context for current path
         $context = $this->buildPropertyContext($properties, $withoutProperties, $propertyPath);
@@ -295,7 +297,8 @@ class VariableDebugPrintCliPrintStrategy implements VariableDebugPrintStrategy
                         . $colorTheme->visibility . $visibility . " "
                         . $colorTheme->key . $prop->getName();
                     
-                    if (!$showKeyOnly) {
+                    $nextPath = $this->getNextPath($propertyPath, $propName);
+                    if ($this->shouldShowValue($showKeyOnly, $ignoredShowKeyPaths, $nextPath)) {
                         $output .= $colorTheme->punctuation . ": ";
                     }
                 } else {
@@ -306,12 +309,14 @@ class VariableDebugPrintCliPrintStrategy implements VariableDebugPrintStrategy
                         . $colorTheme->visibility . $visibility . " "
                         . $colorTheme->key . $prop->getName();
                     
-                    if (!$showKeyOnly) {
+                    $nextPath = $this->getNextPath($propertyPath, $propName);
+                    if ($this->shouldShowValue($showKeyOnly, $ignoredShowKeyPaths, $nextPath)) {
                         $output .= $colorTheme->punctuation . ": ";
                     }
                 }
 
-                if ($showKeyOnly) {
+                $nextPath = $this->getNextPath($propertyPath, $propName);
+                if (!$this->shouldShowValue($showKeyOnly, $ignoredShowKeyPaths, $nextPath)) {
                     $output .= PHP_EOL;
                     $lineCount++;
                 } elseif (!$prop->isInitialized($var)) {
@@ -320,7 +325,6 @@ class VariableDebugPrintCliPrintStrategy implements VariableDebugPrintStrategy
                 } else {
                     try {
                         $value = $prop->getValue($var);
-                        $nextPath = $this->getNextPath($propertyPath, $propName);
                         $output .= $this->formatVariable(
                                 $config, $colorTheme, $value, $depth + 1, $indent . "  ", $lineCount, $nextPath
                             )
@@ -353,12 +357,14 @@ class VariableDebugPrintCliPrintStrategy implements VariableDebugPrintStrategy
                 return $output . $indent . $colorTheme->punctuation . "}";
             }
 
+            $nextPath = $this->getNextPath($propertyPath, $propName);
+            
             if ($config->getShowDetailAccessModifiers()) {
                 $output .= $indent . "  "
                     . $colorTheme->visibility . "public "
                     . $colorTheme->key . '"' . $propName . '"';
                 
-                if (!$showKeyOnly) {
+                if ($this->shouldShowValue($showKeyOnly, $ignoredShowKeyPaths, $nextPath)) {
                     $output .= $colorTheme->punctuation . ": ";
                 }
             } else {
@@ -366,15 +372,14 @@ class VariableDebugPrintCliPrintStrategy implements VariableDebugPrintStrategy
                     . $colorTheme->visibility . "+"
                     . $colorTheme->key . '"' . $propName . '"';
                 
-                if (!$showKeyOnly) {
+                if ($this->shouldShowValue($showKeyOnly, $ignoredShowKeyPaths, $nextPath)) {
                     $output .= $colorTheme->punctuation . ": ";
                 }
             }
 
-            if ($showKeyOnly) {
+            if (!$this->shouldShowValue($showKeyOnly, $ignoredShowKeyPaths, $nextPath)) {
                 $output .= PHP_EOL;
             } else {
-                $nextPath = $this->getNextPath($propertyPath, $propName);
                 $output .= $this->formatVariable(
                         $config, $colorTheme, $propValue, $depth + 1, $indent . "  ", $lineCount, $nextPath
                     )
@@ -466,6 +471,7 @@ class VariableDebugPrintCliPrintStrategy implements VariableDebugPrintStrategy
         // Build context for current level
         $include = [];
         $exclude = [];
+        $showAllNested = false; // Flag: nếu path match chính xác, show all nested
         
         $currentParts = $currentPath === '' ? [] : explode('.', $currentPath);
         $currentDepth = count($currentParts);
@@ -473,9 +479,25 @@ class VariableDebugPrintCliPrintStrategy implements VariableDebugPrintStrategy
         foreach ($remainingIncludes as $path) {
             $parts = explode('.', $path);
             
-            if ($this->pathStartsWith($parts, $currentParts) && count($parts) > $currentDepth) {
-                $include[$parts[$currentDepth]] = true;
+            if ($this->pathStartsWith($parts, $currentParts)) {
+                if (count($parts) === $currentDepth) {
+                    // Path match CHÍNH XÁC current path → show ALL nested
+                    $showAllNested = true;
+                    break;
+                } elseif (count($parts) > $currentDepth) {
+                    // Path còn nested → include key để đi sâu
+                    $include[$parts[$currentDepth]] = true;
+                }
+            } elseif ($this->pathStartsWith($currentParts, $parts)) {
+                // Current path là con của included path → show all
+                $showAllNested = true;
+                break;
             }
+        }
+
+        // Nếu showAllNested, không cần check include list nữa
+        if ($showAllNested) {
+            $include = [];
         }
 
         foreach ($finalExcludes as $path) {
@@ -489,7 +511,7 @@ class VariableDebugPrintCliPrintStrategy implements VariableDebugPrintStrategy
         return [
             'include' => $include,
             'exclude' => $exclude,
-            'hasIncludeAll' => $hasIncludeAll,
+            'hasIncludeAll' => $hasIncludeAll || $showAllNested,
             'isConflictShow' => $isConflictShow
         ];
     }
@@ -526,5 +548,37 @@ class VariableDebugPrintCliPrintStrategy implements VariableDebugPrintStrategy
     private function getNextPath(string $currentPath, string $key): string
     {
         return $currentPath === '' ? $key : $currentPath . '.' . $key;
+    }
+
+    private function shouldShowValue(bool $showKeyOnly, array $ignoredPaths, string $currentPath): bool
+    {
+        if (!$showKeyOnly) {
+            return true; // showKeyOnly = false → luôn show value
+        }
+
+        // showKeyOnly = true
+        // Nếu ignoredPaths empty → chỉ show key cho tất cả
+        if (empty($ignoredPaths)) {
+            return false;
+        }
+
+        // Nếu có ignoredPaths → CHỈ show value cho paths trong list (và children)
+        $currentParts = $currentPath === '' ? [] : explode('.', $currentPath);
+        
+        foreach ($ignoredPaths as $ignoredPath) {
+            $ignoredParts = explode('.', $ignoredPath);
+            
+            // Check exact match hoặc currentPath là con của ignoredPath
+            if ($currentPath === $ignoredPath || $this->pathStartsWith($currentParts, $ignoredParts)) {
+                return true; // Show value
+            }
+            
+            // Check nếu ignoredPath là con của currentPath → cần đi sâu vào
+            if ($this->pathStartsWith($ignoredParts, $currentParts) && count($ignoredParts) > count($currentParts)) {
+                return true; // Show value để đi sâu vào
+            }
+        }
+
+        return false; // Chỉ show key
     }
 }

@@ -39,6 +39,49 @@ class VariablePendingDebug
         return $this;
     }
 
+    public function forLaravelModel(): static
+    {
+        $this->includeProperties([
+            'connection',
+            'table',
+            'primaryKey',
+            'keyType',
+            'incrementing',
+            'with',
+            'withCount',
+            'preventsLazyLoading',
+            'perPage',
+            'exists',
+            'wasRecentlyCreated',
+            'escapeWhenCastingToString',
+            'attributes',
+            'original',
+            'changes',
+            'previous',
+            'casts',
+            'classCastCache',
+            'attributeCastCache',
+            'dateFormat',
+            'appends',
+            'dispatchesEvents',
+            'observables',
+            'relations',
+            'touches',
+            'relationAutoloadCallback',
+            'relationAutoloadContext',
+            'timestamps',
+            'usesUniqueIds',
+            'hidden',
+            'visible',
+            'fillable',
+            'guarded',
+            'authPasswordName',
+            'rememberTokenName',
+        ]);
+
+        return $this;
+    }
+
     public function onFull(?int $maxDepth = null, bool $showArrayOnlyFirstElement = false): static
     {
         $this->variableDebugger->setConfig(
@@ -51,11 +94,12 @@ class VariablePendingDebug
         return $this;
     }
 
-    public function showKeyOnly(?bool $showKeyOnly, array $ignoredShowKeyProperties = []): static
+    public function showKeyOnly(?bool $showKeyOnly, ?array $ignoredShowKeyProperties = null): static
     {
         $this->variableDebugger->setConfig(
             VariableDebugConfig::builder()
                 ->withShowKeyOnly($showKeyOnly)
+                ->withIgnoredShowKeyProperties($ignoredShowKeyProperties)
                 ->build()
                 ->merge($this->variableDebugger->getConfig())
         );

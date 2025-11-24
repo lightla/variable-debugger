@@ -2,8 +2,6 @@
 
 namespace lightla\VariableDebugger\Config;
 
-use lightla\VariableDebugger\VariableDebugConfig;
-
 class VariableDebugConfigGlobalPendingBuilder extends VariableDebugConfigurator
 {
     use VariableDebugConfigBuilderBuildTrait;
@@ -12,9 +10,4 @@ class VariableDebugConfigGlobalPendingBuilder extends VariableDebugConfigurator
    {
        $this->doBuildWithInjectGlobal();
    }
-
-    public function build(): VariableDebugConfig
-    {
-        return $this->doBuild();
-    }
 }

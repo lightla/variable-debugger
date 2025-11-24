@@ -97,7 +97,7 @@ class VariableDebugConfigurator
         return $this;
     }
 
-    public function withIgnoredShowKeyProperties(?bool $ignoredShowKeyProperties): self
+    public function withIgnoredShowKeyProperties(?array $ignoredShowKeyProperties): self
     {
         $this->ignoredShowKeyProperties = $ignoredShowKeyProperties;
 
