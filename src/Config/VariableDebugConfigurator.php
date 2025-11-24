@@ -14,6 +14,7 @@ class VariableDebugConfigurator
     protected ?bool $showDetailAccessModifiers = null;
     protected ?VariableDebugCliColorTheme $cliTheme = null;
     protected ?bool $showKeyOnly = null;
+    protected ?array $ignoredShowKeyProperties = null;
     protected ?array $includedProperties = null;
     protected ?array $excludedProperties = null;
 
@@ -92,6 +93,13 @@ class VariableDebugConfigurator
     public function withShowKeyOnly(?bool $showKeyOnly): self
     {
         $this->showKeyOnly = $showKeyOnly;
+
+        return $this;
+    }
+
+    public function withIgnoredShowKeyProperties(?bool $ignoredShowKeyProperties): self
+    {
+        $this->ignoredShowKeyProperties = $ignoredShowKeyProperties;
 
         return $this;
     }

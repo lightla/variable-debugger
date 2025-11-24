@@ -51,7 +51,7 @@ class VariablePendingDebug
         return $this;
     }
 
-    public function showKeyOnly(?bool $showKeyOnly): static
+    public function showKeyOnly(?bool $showKeyOnly, array $ignoredShowKeyProperties = []): static
     {
         $this->variableDebugger->setConfig(
             VariableDebugConfig::builder()

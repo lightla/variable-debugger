@@ -23,6 +23,7 @@ class VariableDebugConfig
         private ?bool $showValueType = null,
         private ?bool $showDetailAccessModifiers = null,
         private ?bool $showKeyOnly = null,
+        private ?array $ignoredShowKeyProperties = null,
         private ?VariableDebugCliColorTheme $cliTheme = null,
         private ?array $includedProperties = [],
         private ?array $excludedProperties = [],
@@ -96,6 +97,14 @@ class VariableDebugConfig
     /**
      * @return array|null
      */
+    public function getIgnoredShowKeyProperties(): ?array
+    {
+        return $this->ignoredShowKeyProperties;
+    }
+
+    /**
+     * @return array|null
+     */
     public function getExcludedProperties(): ?array
     {
         return $this->excludedProperties;
@@ -147,6 +156,14 @@ class VariableDebugConfig
     public function resolveShowKeyOnlyOrDefault(): bool
     {
         return $this->showKeyOnly ?? self::DEFAULT_SHOW_KEY_ONLY;
+    }
+
+    /**
+     * @return array
+     */
+    public function resolveIgnoredShowKeyPropertiesOrDefault(): array
+    {
+        return $this->ignoredShowKeyProperties ?? [];
     }
 
     /**
