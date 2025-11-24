@@ -15,7 +15,10 @@ trait VariableDebugConfigBuilderBuildTrait
             $this->showArrayMode,
             $this->showValueType,
             $this->showDetailAccessModifiers,
+            $this->showKeyOnly,
             $this->cliTheme,
+            $this->includedProperties,
+            $this->excludedProperties,
         );
     }
 

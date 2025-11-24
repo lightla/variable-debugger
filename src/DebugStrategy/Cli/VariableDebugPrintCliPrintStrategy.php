@@ -61,7 +61,8 @@ class VariableDebugPrintCliPrintStrategy implements VariableDebugPrintStrategy
         mixed $var,
         int $depth = 0,
         string $indent = '',
-        int &$lineCount = 0
+        int &$lineCount = 0,
+        string $propertyPath = ''
     ): string {
         $maxDepth = $config->resolveMaxDepthOrDefault();
         $maxLine = $config->resolveMaxLineOrDefault();
@@ -75,11 +76,11 @@ class VariableDebugPrintCliPrintStrategy implements VariableDebugPrintStrategy
         }
 
         if (is_array($var)) {
-            return $this->formatArray($config, $colorTheme, $var, $depth, $indent, $lineCount);
+            return $this->formatArray($config, $colorTheme, $var, $depth, $indent, $lineCount, $propertyPath);
         }
 
         if (is_object($var)) {
-            return $this->formatObject($config, $colorTheme, $var, $depth, $indent, $lineCount);
+            return $this->formatObject($config, $colorTheme, $var, $depth, $indent, $lineCount, $propertyPath);
         }
 
         $output = '';
@@ -149,7 +150,8 @@ class VariableDebugPrintCliPrintStrategy implements VariableDebugPrintStrategy
         array $var,
         int $depth,
         string $indent,
-        int &$lineCount
+        int &$lineCount,
+        string $propertyPath = ''
     ): string {
         $count = count($var);
         $output = '';
@@ -171,7 +173,7 @@ class VariableDebugPrintCliPrintStrategy implements VariableDebugPrintStrategy
         $i = 0;
 
         $showFirst = $config->resolveShowArrayModeOrDefault()->isShowFirstElement();
-        $showKeyOnly = $config->getShowKeyOnlyOrDefault();
+        $showKeyOnly = $config->resolveShowKeyOnlyOrDefault();
 
         foreach ($var as $key => $value) {
             if ($lineCount >= $maxLine) {
@@ -190,8 +192,9 @@ class VariableDebugPrintCliPrintStrategy implements VariableDebugPrintStrategy
 
             if (!$showKeyOnly) {
                 $output .= $colorTheme->punctuation . " => ";
+                $nextPath = $this->getNextPath($propertyPath, (string)$key);
                 $output .= $this->formatVariable(
-                    $config, $colorTheme, $value, $depth + 1, $newIndent, $lineCount
+                    $config, $colorTheme, $value, $depth + 1, $newIndent, $lineCount, $nextPath
                 );
             }
 
@@ -222,7 +225,8 @@ class VariableDebugPrintCliPrintStrategy implements VariableDebugPrintStrategy
         object $var,
         int $depth,
         string $indent,
-        int &$lineCount
+        int &$lineCount,
+        string $propertyPath = ''
     ): string {
         $ref = new \ReflectionClass($var);
         $className = $ref->getName();
@@ -243,9 +247,12 @@ class VariableDebugPrintCliPrintStrategy implements VariableDebugPrintStrategy
         $objectVars = get_object_vars($var);
         $hasAnyProperty = false;
 
-        $properties = $config->resolvePropertiesOrDefault();
-        $withoutProperties = $config->resolveWithoutPropertiesOrDefault();
-        $showKeyOnly = $config->getShowKeyOnlyOrDefault();
+        $properties = $config->resolveIncludedPropertiesOrDefault();
+        $withoutProperties = $config->resolveExcludedPropertiesOrDefault();
+        $showKeyOnly = $config->resolveShowKeyOnlyOrDefault();
+
+        // Build context for current path
+        $context = $this->buildPropertyContext($properties, $withoutProperties, $propertyPath);
 
         // Loop qua class hierarchy và print trực tiếp
         $current = $ref;
@@ -263,11 +270,8 @@ class VariableDebugPrintCliPrintStrategy implements VariableDebugPrintStrategy
                     continue;
                 }
 
-                // Filter properties
-                if (!empty($properties) && !in_array($propName, $properties)) {
-                    continue;
-                }
-                if (!empty($withoutProperties) && in_array($propName, $withoutProperties)) {
+                // Filter using context
+                if (!$this->shouldShowProperty($propName, $context)) {
                     continue;
                 }
 
@@ -314,8 +318,9 @@ class VariableDebugPrintCliPrintStrategy implements VariableDebugPrintStrategy
                 } else {
                     try {
                         $value = $prop->getValue($var);
+                        $nextPath = $this->getNextPath($propertyPath, $propName);
                         $output .= $this->formatVariable(
-                                $config, $colorTheme, $value, $depth + 1, $indent . "  ", $lineCount
+                                $config, $colorTheme, $value, $depth + 1, $indent . "  ", $lineCount, $nextPath
                             )
                             . PHP_EOL;
                     } catch (\Throwable $e) {
@@ -334,11 +339,8 @@ class VariableDebugPrintCliPrintStrategy implements VariableDebugPrintStrategy
                 continue;
             }
 
-            // Filter properties
-            if (!empty($properties) && !in_array($propName, $properties)) {
-                continue;
-            }
-            if (!empty($withoutProperties) && in_array($propName, $withoutProperties)) {
+            // Filter using context
+            if (!$this->shouldShowProperty($propName, $context)) {
                 continue;
             }
 
@@ -370,8 +372,9 @@ class VariableDebugPrintCliPrintStrategy implements VariableDebugPrintStrategy
             if ($showKeyOnly) {
                 $output .= PHP_EOL;
             } else {
+                $nextPath = $this->getNextPath($propertyPath, $propName);
                 $output .= $this->formatVariable(
-                        $config, $colorTheme, $propValue, $depth + 1, $indent . "  ", $lineCount
+                        $config, $colorTheme, $propValue, $depth + 1, $indent . "  ", $lineCount, $nextPath
                     )
                     . PHP_EOL;
             }
@@ -402,5 +405,87 @@ class VariableDebugPrintCliPrintStrategy implements VariableDebugPrintStrategy
     private function strVarSeparatorLine(): string
     {
         return str_repeat('-', 5);
+    }
+
+    /**
+     * Build property filter context for current path
+     */
+    private function buildPropertyContext(array $properties, array $withoutProperties, string $currentPath = ''): array
+    {
+        $include = [];
+        $exclude = [];
+        $hasExplicitInclude = !empty($properties);
+
+        foreach ($properties as $path) {
+            $parts = explode('.', $path);
+            if ($currentPath === '') {
+                // Root level
+                $include[$parts[0]] = true;
+            } else {
+                // Check if path matches current context
+                $currentParts = explode('.', $currentPath);
+                if ($this->pathStartsWith($parts, $currentParts)) {
+                    $nextKey = $parts[count($currentParts)] ?? null;
+                    if ($nextKey) {
+                        $include[$nextKey] = true;
+                    }
+                }
+            }
+        }
+
+        foreach ($withoutProperties as $path) {
+            $parts = explode('.', $path);
+            if ($currentPath === '') {
+                $exclude[$parts[0]] = true;
+            } else {
+                $currentParts = explode('.', $currentPath);
+                if ($this->pathStartsWith($parts, $currentParts)) {
+                    $nextKey = $parts[count($currentParts)] ?? null;
+                    if ($nextKey) {
+                        $exclude[$nextKey] = true;
+                    }
+                }
+            }
+        }
+
+        return [
+            'include' => $include,
+            'exclude' => $exclude,
+            'hasExplicitInclude' => $hasExplicitInclude
+        ];
+    }
+
+    private function pathStartsWith(array $path, array $prefix): bool
+    {
+        if (count($prefix) > count($path)) {
+            return false;
+        }
+        for ($i = 0; $i < count($prefix); $i++) {
+            if ($path[$i] !== $prefix[$i]) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    private function shouldShowProperty(string $propName, array $context): bool
+    {
+        // If in exclude list, don't show
+        if (isset($context['exclude'][$propName])) {
+            return false;
+        }
+
+        // If has explicit include list, only show if in list
+        if ($context['hasExplicitInclude']) {
+            return isset($context['include'][$propName]);
+        }
+
+        // Otherwise show (no filter or only exclude filter)
+        return true;
+    }
+
+    private function getNextPath(string $currentPath, string $key): string
+    {
+        return $currentPath === '' ? $key : $currentPath . '.' . $key;
     }
 }

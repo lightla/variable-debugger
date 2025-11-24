@@ -10,6 +10,7 @@ class VariableDebugConfigGlobalPendingBuilder extends VariableDebugConfigurator
 
    public function __destruct()
    {
+       dd(123);
        $this->doBuildWithInjectGlobal();
    }
 

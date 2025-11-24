@@ -21,6 +21,14 @@ class VariableDebugger
         }
     }
 
+    /**
+     * @return VariableDebugConfig
+     */
+    public function getConfig(): VariableDebugConfig
+    {
+        return $this->config;
+    }
+
     public function setConfig(VariableDebugConfig $config): self
     {
         $this->config = $config;

@@ -24,8 +24,8 @@ class VariableDebugConfig
         private ?bool $showDetailAccessModifiers = null,
         private ?bool $showKeyOnly = null,
         private ?VariableDebugCliColorTheme $cliTheme = null,
-        private ?array $properties = [],
-        private ?array $withoutProperties = [],
+        private ?array $includedProperties = [],
+        private ?array $excludedProperties = [],
     )
     {
     }
@@ -86,6 +86,30 @@ class VariableDebugConfig
     }
 
     /**
+     * @return bool|null
+     */
+    public function getShowKeyOnly(): ?bool
+    {
+        return $this->showKeyOnly;
+    }
+
+    /**
+     * @return array|null
+     */
+    public function getExcludedProperties(): ?array
+    {
+        return $this->excludedProperties;
+    }
+
+    /**
+     * @return array|null
+     */
+    public function getIncludedProperties(): ?array
+    {
+        return $this->includedProperties;
+    }
+
+    /**
      * @return VariableDebugCliColorTheme|null
      */
     public function getCliTheme(): ?VariableDebugCliColorTheme
@@ -120,7 +144,7 @@ class VariableDebugConfig
     /**
      * @return bool
      */
-    public function getShowKeyOnlyOrDefault(): bool
+    public function resolveShowKeyOnlyOrDefault(): bool
     {
         return $this->showKeyOnly ?? self::DEFAULT_SHOW_KEY_ONLY;
     }
@@ -128,17 +152,17 @@ class VariableDebugConfig
     /**
      * @return array
      */
-    public function resolvePropertiesOrDefault(): array
+    public function resolveIncludedPropertiesOrDefault(): array
     {
-        return $this->properties ?? [];
+        return $this->includedProperties ?? [];
     }
 
     /**
      * @return array
      */
-    public function resolveWithoutPropertiesOrDefault(): array
+    public function resolveExcludedPropertiesOrDefault(): array
     {
-        return $this->withoutProperties ?? [];
+        return $this->excludedProperties ?? [];
     }
 
     /**
@@ -162,7 +186,10 @@ class VariableDebugConfig
             $this->showArrayMode ?? $config?->getShowArrayMode(),
             $this->showValueType ?? $config?->getShowValueType(),
             $this->showDetailAccessModifiers ?? $config?->getShowDetailAccessModifiers(),
+            $this->showKeyOnly ?? $config?->getShowKeyOnly(),
             $this->cliTheme ?? $config?->getCliTheme(),
+            $this->includedProperties ?? $config?->getIncludedProperties(),
+            $this->excludedProperties ?? $config?->getExcludedProperties()
         );
     }
 }

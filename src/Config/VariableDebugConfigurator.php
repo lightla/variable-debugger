@@ -13,6 +13,9 @@ class VariableDebugConfigurator
     protected ?bool $showValueType = null;
     protected ?bool $showDetailAccessModifiers = null;
     protected ?VariableDebugCliColorTheme $cliTheme = null;
+    protected ?array $showKeyOnly = null;
+    protected ?array $includedProperties = null;
+    protected ?array $excludedProperties = null;
 
     /**
      * @param int|null $maxDepth
@@ -82,6 +85,27 @@ class VariableDebugConfigurator
     public function withShowDetailAccessModifiers(?bool $showDetailAccessModifiers): self
     {
         $this->showDetailAccessModifiers = $showDetailAccessModifiers;
+
+        return $this;
+    }
+
+    public function withShowKeyOnly(?bool $showKeyOnly): self
+    {
+        $this->showKeyOnly = $showKeyOnly;
+
+        return $this;
+    }
+
+    public function withProperties(?array $properties): self
+    {
+        $this->includedProperties = $properties;
+
+        return $this;
+    }
+
+    public function withoutProperties(?array $withoutProperties): self
+    {
+        $this->excludedProperties = $withoutProperties;
 
         return $this;
     }
