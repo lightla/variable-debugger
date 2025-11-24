@@ -16,6 +16,7 @@ trait VariableDebugConfigBuilderBuildTrait
             $this->showValueType,
             $this->showDetailAccessModifiers,
             $this->showKeyOnly,
+            $this->ignoredShowKeyProperties,
             $this->cliTheme,
             $this->includedProperties,
             $this->excludedProperties,

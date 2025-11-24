@@ -133,20 +133,7 @@ class VariableDebugPrintHtmlPrintStrategy implements VariableDebugPrintStrategy
             // Build context for current path
             $context = $this->buildPropertyContext($properties, $withoutProperties, $propertyPath);
             
-            // Check if all included properties are excluded at THIS level (conflict)
-            $hasConflict = $context['hasExplicitInclude'] 
-                && !empty($context['include']) 
-                && !empty($context['exclude']);
-            
-            if ($hasConflict) {
-                // Check if ALL included keys are also excluded
-                foreach (array_keys($context['include']) as $key) {
-                    if (!isset($context['exclude'][$key])) {
-                        $hasConflict = false;
-                        break;
-                    }
-                }
-            }
+            $hasConflict = $context['isConflictShow'] && $propertyPath === '';
 
             // Loop qua class hierarchy và print trực tiếp
             $current = $reflection;
@@ -268,6 +255,8 @@ class VariableDebugPrintHtmlPrintStrategy implements VariableDebugPrintStrategy
             if (!$hasAnyProperty) {
                 if ($hasConflict) {
                     $output .= $indent . '  <span style="color:#808080;">[Empty] # excluded properties contain all included properties</span><br>';
+                } elseif ($context['hasIncludeAll'] && !empty($context['exclude'])) {
+                    $output .= $indent . '  <span style="color:#808080;">[Empty] # all properties are excluded</span><br>';
                 } else {
                     $output .= $indent . '  <span style="color:#808080;"># No properties</span><br>';
                 }
@@ -323,46 +312,79 @@ class VariableDebugPrintHtmlPrintStrategy implements VariableDebugPrintStrategy
         return ltrim($filePath, '/');
     }
 
-    private function buildPropertyContext(array $properties, array $withoutProperties, string $currentPath = ''): array
+    private function filterParentPaths(array $paths): array
     {
-        $include = [];
-        $exclude = [];
-        $hasExplicitInclude = !empty($properties);
+        if (empty($paths)) {
+            return [];
+        }
 
-        $currentParts = $currentPath === '' ? [] : explode('.', $currentPath);
-        $currentDepth = count($currentParts);
+        sort($paths);
+        $result = [];
+        $lastAdded = null;
 
-        foreach ($properties as $path) {
-            $parts = explode('.', $path);
-            
-            // Chỉ xử lý nếu path có liên quan đến current level
-            if ($this->pathStartsWith($parts, $currentParts)) {
-                if (count($parts) === $currentDepth + 1) {
-                    // Path match chính xác level tiếp theo
-                    $include[$parts[$currentDepth]] = true;
-                } elseif (count($parts) > $currentDepth + 1) {
-                    // Path còn nested sâu hơn, cần show key này để đi sâu vào
-                    $include[$parts[$currentDepth]] = true;
-                }
+        foreach ($paths as $path) {
+            if ($lastAdded === null || !str_starts_with($path, $lastAdded . '.')) {
+                $result[] = $path;
+                $lastAdded = $path;
             }
         }
 
-        foreach ($withoutProperties as $path) {
+        return $result;
+    }
+
+    private function buildPropertyContext(array $properties, array $withoutProperties, string $currentPath = ''): array
+    {
+        $hasIncludeAll = empty($properties);
+        
+        // Optimize paths
+        $finalIncludes = $this->filterParentPaths($properties);
+        $finalExcludes = $this->filterParentPaths($withoutProperties);
+        
+        // Calculate conflict: includes bị excludes khử hết
+        $remainingIncludes = [];
+        foreach ($finalIncludes as $include) {
+            $isExcluded = false;
+            foreach ($finalExcludes as $exclude) {
+                if ($include === $exclude || str_starts_with($include, $exclude . '.')) {
+                    $isExcluded = true;
+                    break;
+                }
+            }
+            if (!$isExcluded) {
+                $remainingIncludes[] = $include;
+            }
+        }
+        
+        $isConflictShow = !$hasIncludeAll && empty($remainingIncludes);
+        
+        // Build context for current level
+        $include = [];
+        $exclude = [];
+        
+        $currentParts = $currentPath === '' ? [] : explode('.', $currentPath);
+        $currentDepth = count($currentParts);
+
+        foreach ($remainingIncludes as $path) {
             $parts = explode('.', $path);
             
-            if ($this->pathStartsWith($parts, $currentParts)) {
-                if (count($parts) === $currentDepth + 1) {
-                    // Chỉ exclude nếu path match chính xác level này
-                    $exclude[$parts[$currentDepth]] = true;
-                }
-                // Nếu path còn nested (count > currentDepth + 1), KHÔNG exclude ở level này
+            if ($this->pathStartsWith($parts, $currentParts) && count($parts) > $currentDepth) {
+                $include[$parts[$currentDepth]] = true;
+            }
+        }
+
+        foreach ($finalExcludes as $path) {
+            $parts = explode('.', $path);
+            
+            if ($this->pathStartsWith($parts, $currentParts) && count($parts) === $currentDepth + 1) {
+                $exclude[$parts[$currentDepth]] = true;
             }
         }
 
         return [
             'include' => $include,
             'exclude' => $exclude,
-            'hasExplicitInclude' => $hasExplicitInclude
+            'hasIncludeAll' => $hasIncludeAll,
+            'isConflictShow' => $isConflictShow
         ];
     }
 
@@ -381,15 +403,18 @@ class VariableDebugPrintHtmlPrintStrategy implements VariableDebugPrintStrategy
 
     private function shouldShowProperty(string $propName, array $context): bool
     {
+        // Nếu trong exclude list, không show
         if (isset($context['exclude'][$propName])) {
             return false;
         }
 
-        if ($context['hasExplicitInclude']) {
-            return isset($context['include'][$propName]);
+        // Nếu hasIncludeAll (input empty), show tất cả (trừ excluded)
+        if ($context['hasIncludeAll']) {
+            return true;
         }
 
-        return true;
+        // Nếu có include list, chỉ show nếu trong list
+        return isset($context['include'][$propName]);
     }
 
     private function getNextPath(string $currentPath, string $key): string

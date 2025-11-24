@@ -204,6 +204,7 @@ class VariableDebugConfig
             $this->showValueType ?? $config?->getShowValueType(),
             $this->showDetailAccessModifiers ?? $config?->getShowDetailAccessModifiers(),
             $this->showKeyOnly ?? $config?->getShowKeyOnly(),
+            $this->ignoredShowKeyProperties ?? $config?->getIgnoredShowKeyProperties(),
             $this->cliTheme ?? $config?->getCliTheme(),
             $this->includedProperties ?? $config?->getIncludedProperties(),
             $this->excludedProperties ?? $config?->getExcludedProperties()
