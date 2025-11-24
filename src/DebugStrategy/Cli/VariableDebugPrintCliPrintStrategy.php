@@ -448,6 +448,8 @@ class VariableDebugPrintCliPrintStrategy implements VariableDebugPrintStrategy
     {
         $classIncludes = $config->resolveIncludedClassPropertiesOrDefault();
         $classExcludes = $config->resolveExcludedClassPropertiesOrDefault();
+        $globalIncludes = $config->resolveIncludedPropertiesOrDefault();
+        $globalExcludes = $config->resolveExcludedPropertiesOrDefault();
         
         // Tìm class-specific rule (check instanceof)
         $specificIncludes = null;
@@ -467,11 +469,28 @@ class VariableDebugPrintCliPrintStrategy implements VariableDebugPrintStrategy
             }
         }
         
-        // Ưu tiên class-specific, fallback về global
-        $includes = $specificIncludes ?? $config->resolveIncludedPropertiesOrDefault();
-        $excludes = $specificExcludes ?? $config->resolveExcludedPropertiesOrDefault();
+        // Merge logic
+        if ($specificIncludes !== null) {
+            // Có class-specific includes
+            if (empty($globalIncludes)) {
+                // Global empty → dùng class-specific
+                $finalIncludes = $specificIncludes;
+            } else {
+                // Global có → intersection (chỉ show những gì có trong cả 2)
+                $finalIncludes = array_values(array_intersect($specificIncludes, $globalIncludes));
+            }
+        } else {
+            // Không có class-specific → dùng global
+            $finalIncludes = $globalIncludes;
+        }
         
-        return [$includes, $excludes];
+        // Excludes: merge cả 2 (union)
+        $finalExcludes = array_unique(array_merge(
+            $specificExcludes ?? [],
+            $globalExcludes
+        ));
+        
+        return [$finalIncludes, $finalExcludes];
     }
 
     /**
