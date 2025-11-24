@@ -27,17 +27,11 @@ class VariablePendingDebug
         );
     }
 
-    public function onShort(?int $maxDepth = null, bool $showArrayOnlyFirstElement = false): void
+    public function onShort(?int $maxDepth = null, ?bool $showArrayOnlyFirstElement = null): void
     {
         $this->variableDebugger->setConfig(
             VariableDebugConfig::builder()
-                ->withMaxDepth($maxDepth)
-                ->withShowArrayMode($showArrayOnlyFirstElement
-                    ? VariableDebugConfigArrayShowMode::SHOW_FIRST_ELEMENT
-                    : VariableDebugConfigArrayShowMode::SHOW_ALL_ELEMENT
-                )
-                ->withShowDetailAccessModifiers(false)
-                ->withShowValueType(false)
+                ->configShort($maxDepth, $showArrayOnlyFirstElement)
                 ->build()
                 ->merge(VariableDebugConfig::getGlobalConfig())
         );
@@ -47,13 +41,7 @@ class VariablePendingDebug
     {
         $this->variableDebugger->setConfig(
             VariableDebugConfig::builder()
-                ->withMaxDepth($maxDepth)
-                ->withShowArrayMode($showArrayOnlyFirstElement
-                    ? VariableDebugConfigArrayShowMode::SHOW_FIRST_ELEMENT
-                    : VariableDebugConfigArrayShowMode::SHOW_ALL_ELEMENT
-                )
-                ->withShowDetailAccessModifiers(true)
-                ->withShowValueType(true)
+                ->configFull($maxDepth, $showArrayOnlyFirstElement)
                 ->build()
                 ->merge(VariableDebugConfig::getGlobalConfig())
         );

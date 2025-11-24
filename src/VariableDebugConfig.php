@@ -11,6 +11,7 @@ class VariableDebugConfig
     private static ?VariableDebugConfig $globalConfig = null;
 
     private const DEFAULT_MAX_DEPTH = 10;
+    private const DEFAULT_SHOW_ARRAY_MODE = VariableDebugConfigArrayShowMode::SHOW_ALL_ELEMENT;
 
     public function __construct(
         private ?string $projectRootPath = '',
@@ -92,6 +93,14 @@ class VariableDebugConfig
     public function resolveMaxDepthOrDefault(): int
     {
         return $this->maxDepth ?? self::DEFAULT_MAX_DEPTH;
+    }
+
+    /**
+     * @return VariableDebugConfigArrayShowMode
+     */
+    public function resolveShowArrayMode(): VariableDebugConfigArrayShowMode
+    {
+        return $this->showArrayMode ?? self::DEFAULT_SHOW_ARRAY_MODE;
     }
 
     /**

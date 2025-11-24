@@ -13,6 +13,43 @@ class VariableDebugConfigurator
     protected ?bool $showDetailAccessModifiers = null;
     protected ?VariableDebugCliColorTheme $cliTheme = null;
 
+    /**
+     * @param int|null $maxDepth
+     * @param bool $showArrayOnlyFirstElement
+     * @return $this
+     */
+    public function configShort(?int $maxDepth = null, ?bool $showArrayOnlyFirstElement = null): static
+    {
+        $this->withMaxDepth($maxDepth)
+            ->withShowArrayMode(is_null($showArrayOnlyFirstElement)
+                ? null
+                : ( $showArrayOnlyFirstElement
+                    ? VariableDebugConfigArrayShowMode::SHOW_FIRST_ELEMENT
+                    : VariableDebugConfigArrayShowMode::SHOW_ALL_ELEMENT
+                )
+            )
+            ->withShowDetailAccessModifiers(false)
+            ->withShowValueType(false);
+
+        return $this;
+    }
+
+    public function configFull(?int $maxDepth = null, bool $showArrayOnlyFirstElement = false): static
+    {
+        $this->withMaxDepth($maxDepth)
+            ->withShowArrayMode(is_null($showArrayOnlyFirstElement)
+                ? null
+                : ( $showArrayOnlyFirstElement
+                    ? VariableDebugConfigArrayShowMode::SHOW_FIRST_ELEMENT
+                    : VariableDebugConfigArrayShowMode::SHOW_ALL_ELEMENT
+                )
+            )
+            ->withShowDetailAccessModifiers(true)
+            ->withShowValueType(true);
+
+        return $this;
+    }
+
     public function withProjectRootPath(string $projectRootPath): self
     {
         $this->projectRootPath = $projectRootPath;
@@ -27,21 +64,21 @@ class VariableDebugConfigurator
         return $this;
     }
 
-    public function withShowArrayMode(VariableDebugConfigArrayShowMode $showArrayMode): self
+    public function withShowArrayMode(?VariableDebugConfigArrayShowMode $showArrayMode): self
     {
         $this->showArrayMode = $showArrayMode;
 
         return $this;
     }
 
-    public function withShowValueType(bool $showValueType): self
+    public function withShowValueType(?bool $showValueType): self
     {
         $this->showValueType = $showValueType;
 
         return $this;
     }
 
-    public function withShowDetailAccessModifiers(bool $showDetailAccessModifiers): self
+    public function withShowDetailAccessModifiers(?bool $showDetailAccessModifiers): self
     {
         $this->showDetailAccessModifiers = $showDetailAccessModifiers;
 
