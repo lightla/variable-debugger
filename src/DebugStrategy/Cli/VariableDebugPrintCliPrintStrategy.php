@@ -61,7 +61,8 @@ class VariableDebugPrintCliPrintStrategy implements VariableDebugPrintStrategy
         int $depth = 0,
         string $indent = ''
     ): string {
-        $maxDepth = $config->getMaxDepth();
+        $maxDepth = $config->resolveMaxDepthOrDefault();
+
         if ($depth > $maxDepth) {
             return $colorTheme->comment . '[Max Depth Reached]';
         }

@@ -10,6 +10,8 @@ class VariableDebugConfig
 {
     private static ?VariableDebugConfig $globalConfig = null;
 
+    private const DEFAULT_MAX_DEPTH = 10;
+
     public function __construct(
         private ?string $projectRootPath = '',
         private ?int $maxDepth = 10,
@@ -82,6 +84,14 @@ class VariableDebugConfig
     public function resolveCliThemeOrDefault(): VariableDebugCliColorTheme
     {
         return $this->cliTheme ?? VariableDebugCliColorTheme::noColor();
+    }
+
+    /**
+     * @return int
+     */
+    public function resolveMaxDepthOrDefault(): int
+    {
+        return $this->maxDepth ?? self::DEFAULT_MAX_DEPTH;
     }
 
     /**

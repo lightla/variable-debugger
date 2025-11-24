@@ -44,7 +44,7 @@ class VariableDebugPrintHtmlPrintStrategy implements VariableDebugPrintStrategy
         $output = '';
 
         # Prevent infinite recursion
-        $maxDepth = $config->getMaxDepth();
+        $maxDepth = $config->resolveMaxDepthOrDefault();
 
         if ($depth >= $maxDepth) {
             return '<span style="color:#808080;">[Max Depth Reached]</span>';
