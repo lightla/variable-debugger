@@ -13,6 +13,7 @@ class VariableDebugConfig
     private const DEFAULT_MAX_DEPTH = 10;
     private const DEFAULT_SHOW_ARRAY_MODE = VariableDebugConfigArrayShowMode::SHOW_ALL_ELEMENT;
     private const DEFAULT_MAX_LINE = 200;
+    private const DEFAULT_SHOW_KEY_ONLY = false;
 
     public function __construct(
         private ?string $projectRootPath = '',
@@ -21,7 +22,10 @@ class VariableDebugConfig
         private ?VariableDebugConfigArrayShowMode $showArrayMode = null,
         private ?bool $showValueType = null,
         private ?bool $showDetailAccessModifiers = null,
+        private ?bool $showKeyOnly = null,
         private ?VariableDebugCliColorTheme $cliTheme = null,
+        private ?array $properties = [],
+        private ?array $withoutProperties = [],
     )
     {
     }
@@ -111,6 +115,30 @@ class VariableDebugConfig
     public function resolveMaxLineOrDefault(): int
     {
         return $this->maxLine ?? self::DEFAULT_MAX_LINE;
+    }
+
+    /**
+     * @return bool
+     */
+    public function getShowKeyOnlyOrDefault(): bool
+    {
+        return $this->showKeyOnly ?? self::DEFAULT_SHOW_KEY_ONLY;
+    }
+
+    /**
+     * @return array
+     */
+    public function resolvePropertiesOrDefault(): array
+    {
+        return $this->properties ?? [];
+    }
+
+    /**
+     * @return array
+     */
+    public function resolveWithoutPropertiesOrDefault(): array
+    {
+        return $this->withoutProperties ?? [];
     }
 
     /**

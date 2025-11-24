@@ -68,10 +68,8 @@ class VariableDebugPrintHtmlPrintStrategy implements VariableDebugPrintStrategy
                 $lineCount++;
                 $i = 0;
 
-                $showFirstArrayElement = (
-                    $config->resolveShowArrayModeOrDefault()->isShowFirstElement()
-                    && $depth === 0
-                );
+                $showFirstArrayElement = $config->resolveShowArrayModeOrDefault()->isShowFirstElement();
+                $showKeyOnly = $config->getShowKeyOnlyOrDefault();
 
                 foreach ($var as $key => $value) {
                     if ($lineCount >= $maxLine) {
@@ -89,8 +87,10 @@ class VariableDebugPrintHtmlPrintStrategy implements VariableDebugPrintStrategy
                         $output .= '<span style="color:#b5cea8;">' . $key . '</span>';
                     }
 
-                    $output .= ' <span style="color:#d4d4d4;">=></span> ';
-                    $output .= $this->formatVariable($config, $value, $depth + 1, $newIndent, $lineCount);
+                    if (!$showKeyOnly) {
+                        $output .= ' <span style="color:#d4d4d4;">=></span> ';
+                        $output .= $this->formatVariable($config, $value, $depth + 1, $newIndent, $lineCount);
+                    }
 
                     if ($i < $count - 1) {
                         $output .= '<span style="color:#d4d4d4;">,</span>';
@@ -124,6 +124,10 @@ class VariableDebugPrintHtmlPrintStrategy implements VariableDebugPrintStrategy
             $objectVars = get_object_vars($var);
             $hasAnyProperty = false;
 
+            $properties = $config->resolvePropertiesOrDefault();
+            $withoutProperties = $config->resolveWithoutPropertiesOrDefault();
+            $showKeyOnly = $config->getShowKeyOnlyOrDefault();
+
             // Loop qua class hierarchy và print trực tiếp
             $current = $reflection;
             $printedProps = [];
@@ -139,6 +143,15 @@ class VariableDebugPrintHtmlPrintStrategy implements VariableDebugPrintStrategy
                     if (isset($printedProps[$propName])) {
                         continue;
                     }
+
+                    // Filter properties
+                    if (!empty($properties) && !in_array($propName, $properties)) {
+                        continue;
+                    }
+                    if (!empty($withoutProperties) && in_array($propName, $withoutProperties)) {
+                        continue;
+                    }
+
                     $printedProps[$propName] = true;
                     $hasAnyProperty = true;
 
@@ -152,26 +165,39 @@ class VariableDebugPrintHtmlPrintStrategy implements VariableDebugPrintStrategy
                     if ($config->getShowDetailAccessModifiers()) {
                         $visibility = $prop->isPrivate() ? 'private' : ($prop->isProtected() ? 'protected' : 'public');
                         $output .= $indent . '  <span style="color:#c586c0;">' . $visibility . '</span> ';
-                        $output .= '<span style="color:#9cdcfe;">' . $prop->getName() . '</span>: ';
+                        $output .= '<span style="color:#9cdcfe;">' . $prop->getName() . '</span>';
+                        
+                        if (!$showKeyOnly) {
+                            $output .= ': ';
+                        }
                     } else {
                         $visibility = $prop->isPrivate() ? '-' : ($prop->isProtected() ? '#' : '+');
                         $output .= $indent . '  <span style="color:#c586c0;">' . $visibility . '</span>';
-                        $output .= '<span style="color:#9cdcfe;">' . $prop->getName() . '</span>: ';
-                    }
-
-                    try {
-                        if (!$prop->isInitialized($var)) {
-                            $output .= '<span style="color:#808080;">[uninitialized]</span>';
-                        } else {
-                            $propValue = $prop->getValue($var);
-                            $output .= $this->formatVariable($config, $propValue, $depth + 1, $indent . '  ', $lineCount);
+                        $output .= '<span style="color:#9cdcfe;">' . $prop->getName() . '</span>';
+                        
+                        if (!$showKeyOnly) {
+                            $output .= ': ';
                         }
-                    } catch (\Exception $e) {
-                        $output .= '<span style="color:#ff6b6b;">Error: ' . htmlspecialchars($e->getMessage()) . '</span>';
                     }
 
-                    $output .= '<br>';
-                    $lineCount++;
+                    if ($showKeyOnly) {
+                        $output .= '<br>';
+                        $lineCount++;
+                    } else {
+                        try {
+                            if (!$prop->isInitialized($var)) {
+                                $output .= '<span style="color:#808080;">[uninitialized]</span>';
+                            } else {
+                                $propValue = $prop->getValue($var);
+                                $output .= $this->formatVariable($config, $propValue, $depth + 1, $indent . '  ', $lineCount);
+                            }
+                        } catch (\Exception $e) {
+                            $output .= '<span style="color:#ff6b6b;">Error: ' . htmlspecialchars($e->getMessage()) . '</span>';
+                        }
+
+                        $output .= '<br>';
+                        $lineCount++;
+                    }
                 }
 
                 $current = $current->getParentClass();
@@ -182,6 +208,15 @@ class VariableDebugPrintHtmlPrintStrategy implements VariableDebugPrintStrategy
                 if (isset($printedProps[$propName])) {
                     continue;
                 }
+
+                // Filter properties
+                if (!empty($properties) && !in_array($propName, $properties)) {
+                    continue;
+                }
+                if (!empty($withoutProperties) && in_array($propName, $withoutProperties)) {
+                    continue;
+                }
+
                 $hasAnyProperty = true;
 
                 if ($lineCount >= $maxLine) {
@@ -191,13 +226,26 @@ class VariableDebugPrintHtmlPrintStrategy implements VariableDebugPrintStrategy
 
                 if ($config->getShowDetailAccessModifiers()) {
                     $output .= $indent . '  <span style="color:#c586c0;">public</span> ';
-                    $output .= '<span style="color:#9cdcfe;">"' . htmlspecialchars($propName) . '"</span>: ';
+                    $output .= '<span style="color:#9cdcfe;">"' . htmlspecialchars($propName) . '"</span>';
+                    
+                    if (!$showKeyOnly) {
+                        $output .= ': ';
+                    }
                 } else {
                     $output .= $indent . '  <span style="color:#c586c0;">+</span>';
-                    $output .= '<span style="color:#9cdcfe;">"' . htmlspecialchars($propName) . '"</span>: ';
+                    $output .= '<span style="color:#9cdcfe;">"' . htmlspecialchars($propName) . '"</span>';
+                    
+                    if (!$showKeyOnly) {
+                        $output .= ': ';
+                    }
                 }
-                $output .= $this->formatVariable($config, $propValue, $depth + 1, $indent . '  ', $lineCount);
-                $output .= '<br>';
+
+                if ($showKeyOnly) {
+                    $output .= '<br>';
+                } else {
+                    $output .= $this->formatVariable($config, $propValue, $depth + 1, $indent . '  ', $lineCount);
+                    $output .= '<br>';
+                }
                 $lineCount++;
             }
 

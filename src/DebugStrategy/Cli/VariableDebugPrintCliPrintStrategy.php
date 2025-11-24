@@ -170,9 +170,8 @@ class VariableDebugPrintCliPrintStrategy implements VariableDebugPrintStrategy
         $newIndent = $indent . "  ";
         $i = 0;
 
-        $showFirst = (
-            $config->resolveShowArrayModeOrDefault()->isShowFirstElement()
-        );
+        $showFirst = $config->resolveShowArrayModeOrDefault()->isShowFirstElement();
+        $showKeyOnly = $config->getShowKeyOnlyOrDefault();
 
         foreach ($var as $key => $value) {
             if ($lineCount >= $maxLine) {
@@ -184,16 +183,17 @@ class VariableDebugPrintCliPrintStrategy implements VariableDebugPrintStrategy
             $output .= $newIndent;
 
             if (is_string($key)) {
-                $output .= $colorTheme->string . '"' . $key . '"'
-                    . $colorTheme->punctuation . " => ";
+                $output .= $colorTheme->string . '"' . $key . '"';
             } else {
-                $output .= $colorTheme->number . $key
-                    . $colorTheme->punctuation . " => ";
+                $output .= $colorTheme->number . $key;
             }
 
-            $output .= $this->formatVariable(
-                $config, $colorTheme, $value, $depth + 1, $newIndent, $lineCount
-            );
+            if (!$showKeyOnly) {
+                $output .= $colorTheme->punctuation . " => ";
+                $output .= $this->formatVariable(
+                    $config, $colorTheme, $value, $depth + 1, $newIndent, $lineCount
+                );
+            }
 
             if ($i < $count - 1) {
                 $output .= $colorTheme->punctuation . ",";
@@ -243,6 +243,10 @@ class VariableDebugPrintCliPrintStrategy implements VariableDebugPrintStrategy
         $objectVars = get_object_vars($var);
         $hasAnyProperty = false;
 
+        $properties = $config->resolvePropertiesOrDefault();
+        $withoutProperties = $config->resolveWithoutPropertiesOrDefault();
+        $showKeyOnly = $config->getShowKeyOnlyOrDefault();
+
         // Loop qua class hierarchy và print trực tiếp
         $current = $ref;
         $printedProps = [];
@@ -258,6 +262,15 @@ class VariableDebugPrintCliPrintStrategy implements VariableDebugPrintStrategy
                 if (isset($printedProps[$propName])) {
                     continue;
                 }
+
+                // Filter properties
+                if (!empty($properties) && !in_array($propName, $properties)) {
+                    continue;
+                }
+                if (!empty($withoutProperties) && in_array($propName, $withoutProperties)) {
+                    continue;
+                }
+
                 $printedProps[$propName] = true;
                 $hasAnyProperty = true;
 
@@ -274,20 +287,30 @@ class VariableDebugPrintCliPrintStrategy implements VariableDebugPrintStrategy
 
                     $output .= $indent . "  "
                         . $colorTheme->visibility . $visibility . " "
-                        . $colorTheme->key . $prop->getName()
-                        . $colorTheme->punctuation . ": ";
+                        . $colorTheme->key . $prop->getName();
+                    
+                    if (!$showKeyOnly) {
+                        $output .= $colorTheme->punctuation . ": ";
+                    }
                 } else {
                     $visibility = $prop->isPrivate() ? "-"
                         : ($prop->isProtected() ? "#" : "+");
 
                     $output .= $indent . "  "
                         . $colorTheme->visibility . $visibility . " "
-                        . $colorTheme->key . $prop->getName()
-                        . $colorTheme->punctuation . ": ";
+                        . $colorTheme->key . $prop->getName();
+                    
+                    if (!$showKeyOnly) {
+                        $output .= $colorTheme->punctuation . ": ";
+                    }
                 }
 
-                if (!$prop->isInitialized($var)) {
+                if ($showKeyOnly) {
+                    $output .= PHP_EOL;
+                    $lineCount++;
+                } elseif (!$prop->isInitialized($var)) {
                     $output .= $colorTheme->comment . "[uninitialized]" . PHP_EOL;
+                    $lineCount++;
                 } else {
                     try {
                         $value = $prop->getValue($var);
@@ -310,6 +333,15 @@ class VariableDebugPrintCliPrintStrategy implements VariableDebugPrintStrategy
             if (isset($printedProps[$propName])) {
                 continue;
             }
+
+            // Filter properties
+            if (!empty($properties) && !in_array($propName, $properties)) {
+                continue;
+            }
+            if (!empty($withoutProperties) && in_array($propName, $withoutProperties)) {
+                continue;
+            }
+
             $hasAnyProperty = true;
 
             if ($lineCount >= $maxLine) {
@@ -320,19 +352,29 @@ class VariableDebugPrintCliPrintStrategy implements VariableDebugPrintStrategy
             if ($config->getShowDetailAccessModifiers()) {
                 $output .= $indent . "  "
                     . $colorTheme->visibility . "public "
-                    . $colorTheme->key . '"' . $propName . '"'
-                    . $colorTheme->punctuation . ": ";
+                    . $colorTheme->key . '"' . $propName . '"';
+                
+                if (!$showKeyOnly) {
+                    $output .= $colorTheme->punctuation . ": ";
+                }
             } else {
                 $output .= $indent . "  "
                     . $colorTheme->visibility . "+"
-                    . $colorTheme->key . '"' . $propName . '"'
-                    . $colorTheme->punctuation . ": ";
+                    . $colorTheme->key . '"' . $propName . '"';
+                
+                if (!$showKeyOnly) {
+                    $output .= $colorTheme->punctuation . ": ";
+                }
             }
 
-            $output .= $this->formatVariable(
-                    $config, $colorTheme, $propValue, $depth + 1, $indent . "  ", $lineCount
-                )
-                . PHP_EOL;
+            if ($showKeyOnly) {
+                $output .= PHP_EOL;
+            } else {
+                $output .= $this->formatVariable(
+                        $config, $colorTheme, $propValue, $depth + 1, $indent . "  ", $lineCount
+                    )
+                    . PHP_EOL;
+            }
             $lineCount++;
         }
 
