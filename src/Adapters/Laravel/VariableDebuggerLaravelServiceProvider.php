@@ -6,20 +6,23 @@ use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Exceptions\Handler;
 use Illuminate\Support\ServiceProvider;
 use lightla\VariableDebugger\Exceptions\VariableDebugGracefulExitException;
-use Throwable;
 
 class VariableDebuggerLaravelServiceProvider extends ServiceProvider
 {
-    public function boot()
-    {
-        $this->bootForWeb();
-    }
-
     public function register(): void
     {
-        $this->registerForConsole();
+        # Using Decorator Pattern for cover original ExceptionHandler
+        $this->app->extend(ExceptionHandler::class, function (ExceptionHandler $originalHandler) {
+            return new VariableDebuggerLaravelExceptionHandler($originalHandler);
+        });
     }
 
+    /**
+     * Example for Laravel 12 (not use because Laravel 10 not have Exceptions::class)
+     *
+     * @version Laravel 12
+     * @return void
+     */
     private function bootForWeb(): void
     {
         if ($this->app->runningInConsole()) {
@@ -36,56 +39,5 @@ class VariableDebuggerLaravelServiceProvider extends ServiceProvider
                 $exceptions->dontReport(VariableDebugGracefulExitException::class);
             })(new Exceptions($handler)),
         );
-    }
-
-    private function registerForConsole(): void
-    {
-        if (! $this->app->runningInConsole()) {
-            return;
-        }
-
-        # Using Decorator Pattern để "bọc" ExceptionHandler gốc
-        $this->app->extend(ExceptionHandler::class, function (ExceptionHandler $originalHandler, $app) {
-            return new class($originalHandler) implements ExceptionHandler {
-                private ExceptionHandler $originalHandler;
-
-                public function __construct(ExceptionHandler $originalHandler)
-                {
-                    $this->originalHandler = $originalHandler;
-                }
-
-                public function renderForConsole($output, Throwable $e)
-                {
-                    if ($e instanceof VariableDebugGracefulExitException) {
-                        return;
-                    }
-
-                    $this->originalHandler->renderForConsole($output, $e);
-                }
-
-                public function report(Throwable $e)
-                {
-                    if ($e instanceof VariableDebugGracefulExitException) {
-                        return;
-                    }
-
-                    $this->originalHandler->report($e);
-                }
-
-                public function shouldReport(Throwable $e)
-                {
-                    if ($e instanceof VariableDebugGracefulExitException) {
-                        return false;
-                    }
-
-                    return $this->originalHandler->shouldReport($e);
-                }
-
-                public function render($request, Throwable $e)
-                {
-                    return $this->originalHandler->render($request, $e);
-                }
-            };
-        });
     }
 }
