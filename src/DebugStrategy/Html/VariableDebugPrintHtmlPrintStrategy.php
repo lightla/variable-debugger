@@ -19,14 +19,14 @@ class VariableDebugPrintHtmlPrintStrategy implements VariableDebugPrintStrategy
         $file = htmlspecialchars($caller['file']);
         $line = htmlspecialchars($caller['line']);
 
-        echo '<div style="background:#2d2d2d;color:#d4d4d4;padding:15px;margin:15px 0;border:1px solid #444;border-radius:5px;font-family:Consolas,Monaco,monospace;font-size:12px;z-index:99999;">';
+        echo '<div style="background:#2d2d2d;color:#a5a5a5;padding:15px;margin:15px 0;border:1px solid #555;font-family:Consolas,Monaco,monospace;font-size:12px;z-index:99999;">';
         echo '<div style="border-bottom:1px solid #555;padding-bottom:10px;margin-bottom:10px;color:#9cdcfe;">';
         echo "<strong>📁/</strong>{$file}:{$line}<br>";
         echo '</div>';
 
         $lineCount = 0;
         foreach ($vars as $var) {
-            echo '<div style="margin:10px 0;padding:10px;border:1px solid #444;border-radius:3px;">';
+            echo '<div style="margin:10px 0;padding:10px;border:1px solid #555;">';
             echo '<pre style="margin:0;font-family:inherit;white-space:pre-wrap;">';
             echo $this->formatVariable($config, $var, 0, '', $lineCount);
             echo '</pre>';
