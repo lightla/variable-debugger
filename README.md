@@ -14,6 +14,7 @@ v_gl_config()
 //    ->withProperties() # warning (not use for global config)
     ->addClassProperties(\App\Models\User::class, ['attributes'])
     ->addClassPropertiesFromPluginLaravel()
+    ->addClassPropertiesFromPluginPDO()
     // ->addClassPropertiesFromPlugin(
     //      new VariableDebugClassPropertyPluginAdapterLaravel
     //  );
