@@ -48,6 +48,10 @@ class PluginPatternTest extends TestCase
 
     public function test_laravel_plugin_helper_method()
     {
+        if (!class_exists('Illuminate\Database\Eloquent\Model')) {
+            $this->markTestSkipped('Laravel not installed');
+        }
+
         $configurator = new VariableDebugConfigurator();
         $result = $configurator->addClassPropertiesFromPluginLaravel();
 
