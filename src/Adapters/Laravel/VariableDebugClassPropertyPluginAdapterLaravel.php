@@ -3,17 +3,11 @@
 namespace lightla\VariableDebugger\Adapters\Laravel;
 
 use lightla\VariableDebugger\Adapters\VariableDebugClassPropertyPluginAdapter;
+use lightla\VariableDebugger\Config\VariableDebugClassPropertyShowValueMode;
 use lightla\VariableDebugger\Config\VariableDebugConfigurator;
 
 class VariableDebugClassPropertyPluginAdapterLaravel implements VariableDebugClassPropertyPluginAdapter
 {
-    private static function getPropertiesForLaravelFakerProvider(string $fakerProviderClass): array
-    {
-        return match ($fakerProviderClass) {
-            default => ['s'],
-        };
-    }
-
     public function applyTo(
         VariableDebugConfigurator $configurator
     ): void
@@ -31,6 +25,11 @@ class VariableDebugClassPropertyPluginAdapterLaravel implements VariableDebugCla
         $configurator->addClassProperties(
             \Illuminate\Database\Eloquent\Factories\Factory::class,
             self::getPropertiesForLaravelEloquentFactory()
+        );
+
+        $configurator->addClassProperties(
+            \Illuminate\Database\Query\Builder::class,
+            self::getPropertiesForLaravelDatabaseQueryBuilder()
         );
     }
 
@@ -97,6 +96,39 @@ class VariableDebugClassPropertyPluginAdapterLaravel implements VariableDebugCla
             'expandRelationships',
             'excludeRelationships',
             'connection',
+        ];
+    }
+
+    private static function getPropertiesForLaravelDatabaseQueryBuilder()
+    {
+        return [
+            'connection' => VariableDebugClassPropertyShowValueMode::SHOW_TYPE_ONLY,
+            'grammar' => VariableDebugClassPropertyShowValueMode::SHOW_TYPE_ONLY,
+            'processor' => VariableDebugClassPropertyShowValueMode::SHOW_TYPE_ONLY,
+            'bindings',
+            'aggregate',
+            'columns',
+            'distinct',
+            'from',
+            'indexHint',
+            'joins',
+            'wheres',
+            'groups',
+            'havings',
+            'orders',
+            'limit',
+            'groupLimit',
+            'offset',
+            'unions',
+            'unionLimit',
+            'unionOffset',
+            'unionOrders',
+            'lock',
+            'beforeQueryCallbacks',
+            'afterQueryCallbacks',
+            'operators',
+            'bitwiseOperators',
+            'useWritePdo',
         ];
     }
 }
