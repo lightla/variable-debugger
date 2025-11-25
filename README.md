@@ -11,6 +11,7 @@ v_gl_config()
     ->configFull(15, false)
     ->useWebThemeDark()
     ->useCliThemeLight()
+//    ->withProperties() # warning (not use for global config)
     ->withClassProperties(\App\Models\User::class, ['attributes'])
     ->addClassPropertiesFromPluginLaravel()
     // ->addClassPropertiesFromPlugin(

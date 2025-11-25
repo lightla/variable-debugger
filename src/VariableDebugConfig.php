@@ -233,7 +233,10 @@ class VariableDebugConfig
             $this->cliTheme ?? $config?->getCliTheme(),
             $this->includedProperties ?? $config?->getIncludedProperties(),
             $this->excludedProperties ?? $config?->getExcludedProperties(),
-            $this->includedClassProperties ?? $config?->getIncludedClassProperties(),
+            array_replace(
+                $config?->getIncludedClassProperties() ?? [],
+                $this->includedClassProperties ?? []
+            )
         );
     }
 }
