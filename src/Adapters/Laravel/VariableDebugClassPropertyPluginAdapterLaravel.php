@@ -28,6 +28,11 @@ class VariableDebugClassPropertyPluginAdapterLaravel implements VariableDebugCla
         );
 
         $configurator->addClassProperties(
+            \Illuminate\Database\Connection::class,
+            self::getPropertiesForLaravelDatabaseConnection()
+        );
+
+        $configurator->addClassProperties(
             \Illuminate\Database\Query\Builder::class,
             self::getPropertiesForLaravelDatabaseQueryBuilder()
         );
@@ -97,6 +102,35 @@ class VariableDebugClassPropertyPluginAdapterLaravel implements VariableDebugCla
             'excludeRelationships',
             'connection',
             'faker' => VariableDebugClassPropertyShowValueMode::SHOW_TYPE_ONLY,
+        ];
+    }
+
+    private static function getPropertiesForLaravelDatabaseConnection(): array
+    {
+        return [
+            'pdo',
+            'readPdo',
+            'database',
+            'readWriteType',
+            'tablePrefix',
+            'config',
+            'reconnector',
+            'queryGrammar' => VariableDebugClassPropertyShowValueMode::SHOW_TYPE_ONLY,
+            'schemaGrammar' => VariableDebugClassPropertyShowValueMode::SHOW_TYPE_ONLY,
+            'postProcessor' => VariableDebugClassPropertyShowValueMode::SHOW_TYPE_ONLY,
+            'events' => VariableDebugClassPropertyShowValueMode::SHOW_TYPE_ONLY,
+            'fetchMode',
+            'transactions',
+            'transactionsManager',
+            'recordsModified',
+            'readOnWriteConnection',
+            'queryLog',
+            'loggingQueries',
+            'totalQueryDuration',
+            'queryDurationHandlers',
+            'pretending',
+            'beforeStartingTransaction',
+            'beforeExecutingCallbacks',
         ];
     }
 

@@ -88,6 +88,13 @@ class VariablePendingDebug
         return $this;
     }
 
+    public function buildLaterClassProperties(string $className, callable $callback): static
+    {
+        $this->configBuilder->addBuildLaterClassProperties($className, $callback);
+
+        return $this;
+    }
+
     public function addClassPropertiesFromPlugin(VariableDebugClassPropertyPluginAdapter $plugin): static
     {
         $this->configBuilder->addClassPropertiesFromPlugin($plugin);
@@ -98,6 +105,13 @@ class VariablePendingDebug
     public function addClassPropertiesFromPluginLaravel(): static
     {
         $this->configBuilder->addClassPropertiesFromPluginLaravel();
+
+        return $this;
+    }
+
+    public function addClassPropertiesFromPluginPDO(): static
+    {
+        $this->configBuilder->addClassPropertiesFromPluginPDO();
 
         return $this;
     }

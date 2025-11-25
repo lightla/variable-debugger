@@ -3,6 +3,7 @@
 namespace lightla\VariableDebugger\Config;
 
 use lightla\VariableDebugger\Adapters\Laravel\VariableDebugClassPropertyPluginAdapterLaravel;
+use lightla\VariableDebugger\Adapters\PDO\VariableDebugClassPropertyPluginAdapterPDO;
 use lightla\VariableDebugger\Adapters\VariableDebugClassPropertyPluginAdapter;
 use lightla\VariableDebugger\DebugStrategy\Cli\VariableDebugCliColorTheme;
 use lightla\VariableDebugger\DebugStrategy\Cli\VariableDebugPrintCliPrintStrategy;
@@ -22,6 +23,7 @@ class VariableDebugConfigurator
     protected ?array $excludedProperties = null;
     protected ?bool $showExcludedCount = null;
     protected ?array $includedClassProperties = null;
+    protected ?array $includedBuildLaterClassProperties = null;
 
     /**
      * @param int|null $maxDepth
@@ -158,22 +160,29 @@ class VariableDebugConfigurator
     public function addClassProperties(string $className, array $properties): self
     {
         $normalized = [];
-        
+
         foreach ($properties as $property => $value) {
             if ($value instanceof VariableDebugClassPropertyShowValueMode) {
                 $normalized[$property] = $value;
                 continue;
             }
 
-            if (is_int($property)) {
-                $normalized[$value] = VariableDebugClassPropertyShowValueMode::SHOW_DETAIL;
-                continue;
-            }
+                if (is_int($property)) {
+                    $normalized[$value] = VariableDebugClassPropertyShowValueMode::SHOW_DETAIL;
+                    continue;
+                }
 
             throw new \RuntimeException("adding class property {$className} has error occur");
         }
 
         $this->includedClassProperties[$className] = $normalized;
+
+        return $this;
+    }
+
+    public function addBuildLaterClassProperties(string $className, callable $properties): self
+    {
+        $this->includedBuildLaterClassProperties[$className] = $properties;
 
         return $this;
     }
@@ -188,6 +197,11 @@ class VariableDebugConfigurator
     public function addClassPropertiesFromPluginLaravel(): self
     {
         return $this->addClassPropertiesFromPlugin(new VariableDebugClassPropertyPluginAdapterLaravel());
+    }
+
+    public function addClassPropertiesFromPluginPDO(): self
+    {
+        return $this->addClassPropertiesFromPlugin(new VariableDebugClassPropertyPluginAdapterPDO());
     }
 
     public function useCliTheme(VariableDebugCliColorTheme $theme): self

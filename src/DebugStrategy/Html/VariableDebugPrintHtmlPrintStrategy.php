@@ -142,6 +142,32 @@ class VariableDebugPrintHtmlPrintStrategy implements VariableDebugPrintStrategy
             }
             $lineCount++;
 
+            // Check buildLaterClassProperties
+            $buildLaterProperties = $config->resolveBuildLaterClassPropertiesOrDefault();
+            foreach ($buildLaterProperties as $buildClassName => $callback) {
+                if ($var instanceof $buildClassName) {
+                    // Gọi callback để lấy properties
+                    $customProperties = $callback($var);
+                    
+                    // Render custom properties
+                    foreach ($customProperties as $propName => $propValue) {
+                        if ($lineCount >= $maxLine) {
+                            $output .= $indent . '  <span style="color:#808080;">... (truncated)</span><br>';
+                            return $output . $indent . '}';
+                        }
+                        
+                        $output .= $indent . '  <span style="color:#9cdcfe;">' . htmlspecialchars($propName) . '</span>: ';
+                        $output .= $this->formatVariable(
+                            $config, $propValue, $depth + 1, $indent . '  ', $lineCount, $this->getNextPath($propertyPath, $propName)
+                        ) . '<br>';
+                        $lineCount++;
+                    }
+                    
+                    return $output . $indent . '}';
+                }
+            }
+
+            // Normal Reflection logic (existing code)
             $objectVars = get_object_vars($var);
             $hasAnyProperty = false;
 

@@ -30,6 +30,7 @@ class VariableDebugConfig
         private ?array $excludedProperties = [],
         private ?bool $showExcludedCount = null,
         private ?array $includedClassProperties = [],
+        private ?array $includedBuildLaterClassProperties = [],
     )
     {
     }
@@ -138,6 +139,14 @@ class VariableDebugConfig
     }
 
     /**
+     * @return array|null
+     */
+    public function getIncludedBuildLaterClassProperties(): ?array
+    {
+        return $this->includedBuildLaterClassProperties;
+    }
+
+    /**
      * @return VariableDebugCliColorTheme|null
      */
     public function getCliTheme(): ?VariableDebugCliColorTheme
@@ -212,6 +221,14 @@ class VariableDebugConfig
     /**
      * @return array
      */
+    public function resolveBuildLaterClassPropertiesOrDefault(): array
+    {
+        return $this->includedBuildLaterClassProperties ?? [];
+    }
+
+    /**
+     * @return array
+     */
     public function resolveExcludedClassPropertiesOrDefault(): array
     {
         return [];
@@ -255,7 +272,11 @@ class VariableDebugConfig
             array_replace(
                 $config?->getIncludedClassProperties() ?? [],
                 $this->includedClassProperties ?? []
-            )
+            ),
+            array_replace(
+                $config?->getIncludedBuildLaterClassProperties() ?? [],
+                $this->includedBuildLaterClassProperties ?? []
+            ),
         );
     }
 }
