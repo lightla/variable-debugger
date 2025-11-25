@@ -3,7 +3,6 @@
 namespace lightla\VariableDebugger\Config;
 
 use lightla\VariableDebugger\Adapters\Laravel\VariableDebugClassPropertyPluginAdapterLaravel;
-use lightla\VariableDebugger\Adapters\Laravel\VariableDebugPropertyLaravel;
 use lightla\VariableDebugger\Adapters\VariableDebugClassPropertyPluginAdapter;
 use lightla\VariableDebugger\DebugStrategy\Cli\VariableDebugCliColorTheme;
 

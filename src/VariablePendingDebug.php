@@ -2,6 +2,7 @@
 
 namespace lightla\VariableDebugger;
 
+use lightla\VariableDebugger\Adapters\VariableDebugClassPropertyPluginAdapter;
 use lightla\VariableDebugger\Config\VariableDebugConfigBuilder;
 
 class VariablePendingDebug
@@ -62,6 +63,13 @@ class VariablePendingDebug
     public function includeProperties(array $properties): static
     {
         $this->variableDebugConfigBuilder->withProperties($properties);
+
+        return $this;
+    }
+
+    public function addClassPropertiesFromPlugin(VariableDebugClassPropertyPluginAdapter $plugin): static
+    {
+        $this->variableDebugConfigBuilder->addClassPropertiesFromPlugin($plugin);
 
         return $this;
     }
