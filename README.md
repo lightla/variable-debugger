@@ -2,6 +2,9 @@
 ### FOR YOU ###
 
 ```php
+// IF Laravel: add bootstrap/providers.php for Graceful Exit
+VariableDebuggerLaravelServiceProvider::class
+
 # Global Config
 v_gl_config()
     ->configShort(15, false)
