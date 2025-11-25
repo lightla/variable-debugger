@@ -12,7 +12,7 @@ v_gl_config()
     ->useWebThemeDark()
     ->useCliThemeLight()
 //    ->withProperties() # warning (not use for global config)
-    ->withClassProperties(\App\Models\User::class, ['attributes'])
+    ->addClassProperties(\App\Models\User::class, ['attributes'])
     ->addClassPropertiesFromPluginLaravel()
     // ->addClassPropertiesFromPlugin(
     //      new VariableDebugClassPropertyPluginAdapterLaravel
@@ -21,12 +21,12 @@ v_gl_config()
 # Usecase
 $u = \App\Models\User::factory()->create();
 
-v_dump($u, ['x' => ['tmp1' => 1, 'tmp2' => 2]])->includeProperties(['x.tmp1']);
+v_dump($u, ['x' => ['tmp1' => 1, 'tmp2' => 2]])->withProperties(['x.tmp1']);
 
 v_dd($u, ['x' => 1, (object)['y' => 1]])
     ->showKeyOnly(true, ['connection', 'attributes.name'])
-    ->includeProperties(['fillable', 'hidden', 'connection', 'attributes'])
-    ->excludeProperties(['hidden'])
+    ->withProperties(['fillable', 'hidden', 'connection', 'attributes'])
+    ->withoutProperties(['hidden'])
     ->addClassPropertiesFromPluginLaravel()
 ;
 ```

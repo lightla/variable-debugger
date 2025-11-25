@@ -152,7 +152,7 @@ class EdgeCaseTest extends TestCase
         $data = ['a' => 1, 'b' => 2];
         
         $output = $this->captureOutput(function() use ($data) {
-            v_dump($data)->includeProperties(['c', 'd']);
+            v_dump($data)->withProperties(['c', 'd']);
         });
 
         $this->assertStringNotContainsString('"a"', $output);
@@ -164,7 +164,7 @@ class EdgeCaseTest extends TestCase
         $data = ['a' => 1, 'b' => 2];
         
         $output = $this->captureOutput(function() use ($data) {
-            v_dump($data)->excludeProperties(['a', 'b']);
+            v_dump($data)->withoutProperties(['a', 'b']);
         });
 
         $this->assertStringContainsString('excluded', $output);
@@ -194,7 +194,7 @@ class EdgeCaseTest extends TestCase
         ];
         
         $output = $this->captureOutput(function() use ($data) {
-            v_dump($data)->includeProperties(['a.b.c.d']);
+            v_dump($data)->withProperties(['a.b.c.d']);
         });
 
         $this->assertStringContainsString('"a"', $output);

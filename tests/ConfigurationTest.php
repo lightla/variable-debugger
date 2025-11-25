@@ -83,7 +83,7 @@ class ConfigurationTest extends TestCase
         $data = ['a' => 1, 'b' => 2, 'c' => 3];
         
         $output = $this->captureOutput(function() use ($data) {
-            v_dump($data)->includeProperties(['a', 'b']);
+            v_dump($data)->withProperties(['a', 'b']);
         });
 
         $this->assertStringContainsString('"a"', $output);
@@ -96,7 +96,7 @@ class ConfigurationTest extends TestCase
         $data = ['a' => 1, 'b' => 2, 'c' => 3];
         
         $output = $this->captureOutput(function() use ($data) {
-            v_dump($data)->excludeProperties(['b']);
+            v_dump($data)->withoutProperties(['b']);
         });
 
         $this->assertStringContainsString('"a"', $output);
@@ -112,7 +112,7 @@ class ConfigurationTest extends TestCase
             v_dump($data)
                 ->maxDepth(5)
                 ->showValueType(true)
-                ->includeProperties(['test']);
+                ->withProperties(['test']);
         });
 
         $this->assertStringContainsString('"test"', $output);

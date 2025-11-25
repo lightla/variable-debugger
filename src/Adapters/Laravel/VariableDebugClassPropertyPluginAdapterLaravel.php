@@ -11,7 +11,7 @@ class VariableDebugClassPropertyPluginAdapterLaravel implements VariableDebugCla
         VariableDebugConfigurator $configurator
     ): void
     {
-        $configurator->withClassProperties(
+        $configurator->addClassProperties(
             \Illuminate\Database\Eloquent\Model::class,
             self::getPropertiesForLaravelEloquentModel()
         );

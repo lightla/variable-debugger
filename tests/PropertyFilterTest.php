@@ -18,7 +18,7 @@ class PropertyFilterTest extends TestCase
         $data = ['x' => 1, 'y' => 2, 'z' => 3];
         
         $output = $this->captureOutput(function() use ($data) {
-            v_dump($data)->includeProperties(['x', 'z']);
+            v_dump($data)->withProperties(['x', 'z']);
         });
 
         $this->assertStringContainsString('"x"', $output);
@@ -31,7 +31,7 @@ class PropertyFilterTest extends TestCase
         $data = ['x' => 1, 'y' => 2, 'z' => 3];
         
         $output = $this->captureOutput(function() use ($data) {
-            v_dump($data)->excludeProperties(['y']);
+            v_dump($data)->withoutProperties(['y']);
         });
 
         $this->assertStringContainsString('"x"', $output);
@@ -47,7 +47,7 @@ class PropertyFilterTest extends TestCase
         ];
         
         $output = $this->captureOutput(function() use ($data) {
-            v_dump($data)->includeProperties(['x.tmp1']);
+            v_dump($data)->withProperties(['x.tmp1']);
         });
 
         $this->assertStringContainsString('"x"', $output);
@@ -65,7 +65,7 @@ class PropertyFilterTest extends TestCase
         };
         
         $output = $this->captureOutput(function() use ($obj) {
-            v_dump($obj)->includeProperties(['name', 'email']);
+            v_dump($obj)->withProperties(['name', 'email']);
         });
 
         $this->assertStringContainsString('name', $output);
@@ -87,7 +87,7 @@ class PropertyFilterTest extends TestCase
         ];
         
         $output = $this->captureOutput(function() use ($data) {
-            v_dump($data)->includeProperties(['user.name']);
+            v_dump($data)->withProperties(['user.name']);
         });
 
         $this->assertStringContainsString('"user"', $output);
@@ -131,7 +131,7 @@ class PropertyFilterTest extends TestCase
         $data = ['a' => 1, 'b' => 2, 'c' => 3, 'd' => 4];
         
         $output = $this->captureOutput(function() use ($data) {
-            v_dump($data)->includeProperties(['a', 'b']);
+            v_dump($data)->withProperties(['a', 'b']);
         });
 
         $this->assertStringContainsString('[2 excluded]', $output);
@@ -147,7 +147,7 @@ class PropertyFilterTest extends TestCase
         };
         
         $output = $this->captureOutput(function() use ($obj) {
-            v_dump($obj)->includeProperties(['a', 'b']);
+            v_dump($obj)->withProperties(['a', 'b']);
         });
 
         $this->assertStringContainsString('[2 excluded]', $output);
@@ -177,7 +177,7 @@ class PropertyFilterTest extends TestCase
         ];
         
         $output = $this->captureOutput(function() use ($data) {
-            v_dump($data)->includeProperties(['x.tmp1', 'z.name']);
+            v_dump($data)->withProperties(['x.tmp1', 'z.name']);
         });
 
         $this->assertStringContainsString('"x"', $output);

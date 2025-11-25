@@ -12,7 +12,7 @@ class PluginPatternTest extends TestCase
         $plugin = new class implements VariableDebugClassPropertyPluginAdapter {
             public function applyTo(VariableDebugConfigurator $configurator): void
             {
-                $configurator->withClassProperties('stdClass', ['custom_prop']);
+                $configurator->addClassProperties('stdClass', ['custom_prop']);
             }
         };
 
@@ -27,14 +27,14 @@ class PluginPatternTest extends TestCase
         $plugin1 = new class implements VariableDebugClassPropertyPluginAdapter {
             public function applyTo(VariableDebugConfigurator $configurator): void
             {
-                $configurator->withClassProperties('stdClass', ['prop1']);
+                $configurator->addClassProperties('stdClass', ['prop1']);
             }
         };
 
         $plugin2 = new class implements VariableDebugClassPropertyPluginAdapter {
             public function applyTo(VariableDebugConfigurator $configurator): void
             {
-                $configurator->withClassProperties('ArrayObject', ['prop2']);
+                $configurator->addClassProperties('ArrayObject', ['prop2']);
             }
         };
 

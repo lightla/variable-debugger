@@ -60,9 +60,23 @@ class VariablePendingDebug
         return $this;
     }
 
-    public function includeProperties(array $properties): static
+    public function withProperties(array $properties): static
     {
         $this->variableDebugConfigBuilder->withProperties($properties);
+
+        return $this;
+    }
+
+    public function withoutProperties(array $properties): static
+    {
+        $this->variableDebugConfigBuilder->withoutProperties($properties);
+
+        return $this;
+    }
+
+    public function classProperties(string $className, array $properties): static
+    {
+        $this->variableDebugConfigBuilder->addClassProperties($className, $properties);
 
         return $this;
     }
@@ -77,13 +91,6 @@ class VariablePendingDebug
     public function addClassPropertiesFromPluginLaravel(): static
     {
         $this->variableDebugConfigBuilder->addClassPropertiesFromPluginLaravel();
-
-        return $this;
-    }
-
-    public function excludeProperties(array $properties): static
-    {
-        $this->variableDebugConfigBuilder->withoutProperties($properties);
 
         return $this;
     }

@@ -120,7 +120,7 @@ class VariableDebugConfigurator
         return $this;
     }
 
-    public function withClassProperties(string $className, array $properties): self
+    public function addClassProperties(string $className, array $properties): self
     {
         $this->includedClassProperties[$className] = $properties;
 
