@@ -5,6 +5,7 @@ namespace lightla\VariableDebugger\Config;
 use lightla\VariableDebugger\Adapters\Laravel\VariableDebugClassPropertyPluginAdapterLaravel;
 use lightla\VariableDebugger\Adapters\VariableDebugClassPropertyPluginAdapter;
 use lightla\VariableDebugger\DebugStrategy\Cli\VariableDebugCliColorTheme;
+use lightla\VariableDebugger\DebugStrategy\Cli\VariableDebugPrintCliPrintStrategy;
 
 class VariableDebugConfigurator
 {
@@ -140,6 +141,20 @@ class VariableDebugConfigurator
 
     public function addClassProperties(string $className, array $properties): self
     {
+        foreach ($properties as $property => $value) {
+            if ($value instanceof VariableDebugClassPropertyShowValueMode) {
+                $properties[$property] = $value;
+                continue;
+            }
+
+            if (is_int($property)) {
+                $properties[$value] = VariableDebugClassPropertyShowValueMode::SHOW_DETAIL;
+                continue;
+            }
+
+            throw new \RuntimeException("adding class property {$className} has error occur");
+        }
+
         $this->includedClassProperties[$className] = $properties;
 
         return $this;

@@ -229,7 +229,17 @@ class VariableDebugPrintHtmlPrintStrategy implements VariableDebugPrintStrategy
                                 $output .= '<span style="color:#808080;">[uninitialized]</span>';
                             } else {
                                 $propValue = $prop->getValue($var);
-                                $output .= $this->formatVariable($config, $propValue, $depth + 1, $indent . '  ', $lineCount, $nextPath);
+                                
+                                // Check property show value mode từ classIncludes
+                                $showValueMode = $this->getPropertyShowValueMode($var, $propName, $classIncludes, $config);
+                                
+                                if ($showValueMode->isShowTypeOnly()) {
+                                    // Chỉ show type
+                                    $output .= $this->formatTypeOnly($propValue);
+                                } else {
+                                    // Show full detail
+                                    $output .= $this->formatVariable($config, $propValue, $depth + 1, $indent . '  ', $lineCount, $nextPath);
+                                }
                             }
                         } catch (\Exception $e) {
                             $output .= '<span style="color:#ff6b6b;">Error: ' . htmlspecialchars($e->getMessage()) . '</span>';
@@ -290,7 +300,17 @@ class VariableDebugPrintHtmlPrintStrategy implements VariableDebugPrintStrategy
                 if (!$this->shouldShowValue($showKeyOnly, $ignoredShowKeyPaths, $nextPath)) {
                     $output .= '<br>';
                 } else {
-                    $output .= $this->formatVariable($config, $propValue, $depth + 1, $indent . '  ', $lineCount, $nextPath);
+                    // Check property show value mode từ classIncludes
+                    $showValueMode = $this->getPropertyShowValueMode($var, $propName, $classIncludes, $config);
+                    
+                    if ($showValueMode->isShowTypeOnly()) {
+                        // Chỉ show type
+                        $output .= $this->formatTypeOnly($propValue);
+                    } else {
+                        // Show full detail
+                        $output .= $this->formatVariable($config, $propValue, $depth + 1, $indent . '  ', $lineCount, $nextPath);
+                    }
+                    
                     $output .= '<br>';
                 }
                 $lineCount++;
@@ -575,15 +595,11 @@ class VariableDebugPrintHtmlPrintStrategy implements VariableDebugPrintStrategy
     {
         $classIncludes = $config->resolveIncludedClassPropertiesOrDefault();
         
-        foreach ($classIncludes as $className => $paths) {
+        foreach ($classIncludes as $className => $properties) {
             if ($var instanceof $className) {
-                // Extract root properties only
-                $rootProps = [];
-                foreach ($paths as $path) {
-                    $parts = explode('.', $path);
-                    $rootProps[] = $parts[0];
-                }
-                return array_unique($rootProps);
+                // Properties đã normalized: ['field1' => SHOW_DETAIL, 'field2' => SHOW_TYPE_ONLY]
+                // Chỉ lấy keys (property names)
+                return array_keys($properties);
             }
         }
         
@@ -606,5 +622,66 @@ class VariableDebugPrintHtmlPrintStrategy implements VariableDebugPrintStrategy
         $context = $this->buildPropertyContext($globalIncludes, $globalExcludes, $propertyPath);
         
         return $this->shouldShowProperty($objectPropertyPath, $context);
+    }
+    
+    private function getPropertyShowValueMode(
+        object $var, 
+        string $propName, 
+        ?array $classIncludes, 
+        VariableDebugConfig $config
+    ): \lightla\VariableDebugger\Config\VariableDebugClassPropertyShowValueMode {
+        // Nếu không có classIncludes, return SHOW_DETAIL
+        if ($classIncludes === null) {
+            return \lightla\VariableDebugger\Config\VariableDebugClassPropertyShowValueMode::SHOW_DETAIL;
+        }
+        
+        // Lấy full classProperties từ config
+        $allClassProperties = $config->resolveIncludedClassPropertiesOrDefault();
+        
+        foreach ($allClassProperties as $className => $properties) {
+            if ($var instanceof $className) {
+                // Properties đã được normalize trong addClassProperties
+                // Dạng: ['field1' => SHOW_DETAIL, 'field2' => SHOW_TYPE_ONLY]
+                return $properties[$propName] ?? \lightla\VariableDebugger\Config\VariableDebugClassPropertyShowValueMode::SHOW_DETAIL;
+            }
+        }
+        
+        return \lightla\VariableDebugger\Config\VariableDebugClassPropertyShowValueMode::SHOW_DETAIL;
+    }
+    
+    private function formatTypeOnly(mixed $value): string
+    {
+        if (is_object($value)) {
+            $className = htmlspecialchars(get_class($value));
+            return '<span style="color:#4ec9b0;">object</span>(<span style="color:#c586c0;">' . $className . '</span>)';
+        }
+        
+        if (is_array($value)) {
+            $count = count($value);
+            return '<span style="color:#4ec9b0;">array</span>(<span style="color:#b5cea8;">' . $count . '</span>)';
+        }
+        
+        if (is_string($value)) {
+            $len = strlen($value);
+            return '<span style="color:#4ec9b0;">string</span>(<span style="color:#b5cea8;">' . $len . '</span>)';
+        }
+        
+        if (is_int($value)) {
+            return '<span style="color:#4ec9b0;">int</span>';
+        }
+        
+        if (is_float($value)) {
+            return '<span style="color:#4ec9b0;">float</span>';
+        }
+        
+        if (is_bool($value)) {
+            return '<span style="color:#4ec9b0;">bool</span>';
+        }
+        
+        if (is_null($value)) {
+            return '<span style="color:#569cd6;">null</span>';
+        }
+        
+        return '<span style="color:#4ec9b0;">' . htmlspecialchars(gettype($value)) . '</span>';
     }
 }

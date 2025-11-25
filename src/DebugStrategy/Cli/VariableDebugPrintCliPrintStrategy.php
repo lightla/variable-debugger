@@ -358,12 +358,22 @@ class VariableDebugPrintCliPrintStrategy implements VariableDebugPrintStrategy
                 } else {
                     try {
                         $value = $prop->getValue($var);
-                        // Use full path for nested filtering (global includes/excludes)
-                        $fullPath = $this->getNextPath($propertyPath, $propName);
-                        $output .= $this->formatVariable(
-                                $config, $colorTheme, $value, $depth + 1, $indent . "  ", $lineCount, $fullPath
-                            )
-                            . PHP_EOL;
+                        
+                        // Check property show value mode từ classIncludes
+                        $showValueMode = $this->getPropertyShowValueMode($var, $propName, $classIncludes, $config);
+                        
+                        if ($showValueMode->isShowTypeOnly()) {
+                            // Chỉ show type
+                            $output .= $this->formatTypeOnly($colorTheme, $value) . PHP_EOL;
+                        } else {
+                            // Show full detail
+                            // Use full path for nested filtering (global includes/excludes)
+                            $fullPath = $this->getNextPath($propertyPath, $propName);
+                            $output .= $this->formatVariable(
+                                    $config, $colorTheme, $value, $depth + 1, $indent . "  ", $lineCount, $fullPath
+                                )
+                                . PHP_EOL;
+                        }
                     } catch (\Throwable $e) {
                         $output .= $colorTheme->error . "Error: " . $e->getMessage() . PHP_EOL;
                     }
@@ -423,11 +433,20 @@ class VariableDebugPrintCliPrintStrategy implements VariableDebugPrintStrategy
             if (!$this->shouldShowValue($showKeyOnly, $ignoredShowKeyPaths, $nextPath)) {
                 $output .= PHP_EOL;
             } else {
-                $fullPath = $this->getNextPath($propertyPath, $propName);
-                $output .= $this->formatVariable(
-                        $config, $colorTheme, $propValue, $depth + 1, $indent . "  ", $lineCount, $fullPath
-                    )
-                    . PHP_EOL;
+                // Check property show value mode từ classIncludes
+                $showValueMode = $this->getPropertyShowValueMode($var, $propName, $classIncludes, $config);
+                
+                if ($showValueMode->isShowTypeOnly()) {
+                    // Chỉ show type
+                    $output .= $this->formatTypeOnly($colorTheme, $propValue) . PHP_EOL;
+                } else {
+                    // Show full detail
+                    $fullPath = $this->getNextPath($propertyPath, $propName);
+                    $output .= $this->formatVariable(
+                            $config, $colorTheme, $propValue, $depth + 1, $indent . "  ", $lineCount, $fullPath
+                        )
+                        . PHP_EOL;
+                }
             }
             $lineCount++;
         }
@@ -524,15 +543,11 @@ class VariableDebugPrintCliPrintStrategy implements VariableDebugPrintStrategy
     {
         $classIncludes = $config->resolveIncludedClassPropertiesOrDefault();
         
-        foreach ($classIncludes as $className => $paths) {
+        foreach ($classIncludes as $className => $properties) {
             if ($var instanceof $className) {
-                // Extract root properties only
-                $rootProps = [];
-                foreach ($paths as $path) {
-                    $parts = explode('.', $path);
-                    $rootProps[] = $parts[0];
-                }
-                return array_unique($rootProps);
+                // Properties đã normalized: ['field1' => SHOW_DETAIL, 'field2' => SHOW_TYPE_ONLY]
+                // Chỉ lấy keys (property names)
+                return array_keys($properties);
             }
         }
         
@@ -790,5 +805,69 @@ class VariableDebugPrintCliPrintStrategy implements VariableDebugPrintStrategy
         }
 
         return false; // Chỉ show key
+    }
+
+    private function getPropertyShowValueMode(
+        object $var, 
+        string $propName, 
+        ?array $classIncludes, 
+        VariableDebugConfig $config
+    ): \lightla\VariableDebugger\Config\VariableDebugClassPropertyShowValueMode {
+        // Nếu không có classIncludes, return SHOW_DETAIL
+        if ($classIncludes === null) {
+            return \lightla\VariableDebugger\Config\VariableDebugClassPropertyShowValueMode::SHOW_DETAIL;
+        }
+        
+        // Lấy full classProperties từ config
+        $allClassProperties = $config->resolveIncludedClassPropertiesOrDefault();
+        
+        foreach ($allClassProperties as $className => $properties) {
+            if ($var instanceof $className) {
+                // Properties đã được normalize trong addClassProperties
+                // Dạng: ['field1' => SHOW_DETAIL, 'field2' => SHOW_TYPE_ONLY]
+                return $properties[$propName] ?? \lightla\VariableDebugger\Config\VariableDebugClassPropertyShowValueMode::SHOW_DETAIL;
+            }
+        }
+        
+        return \lightla\VariableDebugger\Config\VariableDebugClassPropertyShowValueMode::SHOW_DETAIL;
+    }
+
+    private function formatTypeOnly(VariableDebugCliColorTheme $colorTheme, mixed $value): string
+    {
+        if (is_object($value)) {
+            $className = get_class($value);
+            return $colorTheme->type . "object" . $colorTheme->punctuation
+                . "(" . $colorTheme->className . $className . $colorTheme->punctuation . ")";
+        }
+        
+        if (is_array($value)) {
+            $count = count($value);
+            return $colorTheme->type . "array" . $colorTheme->punctuation
+                . "(" . $colorTheme->number . $count . $colorTheme->punctuation . ")";
+        }
+        
+        if (is_string($value)) {
+            $len = strlen($value);
+            return $colorTheme->type . "string" . $colorTheme->punctuation
+                . "(" . $colorTheme->number . $len . $colorTheme->punctuation . ")";
+        }
+        
+        if (is_int($value)) {
+            return $colorTheme->type . "int";
+        }
+        
+        if (is_float($value)) {
+            return $colorTheme->type . "float";
+        }
+        
+        if (is_bool($value)) {
+            return $colorTheme->type . "bool";
+        }
+        
+        if (is_null($value)) {
+            return $colorTheme->boolNull . "null";
+        }
+        
+        return $colorTheme->type . gettype($value);
     }
 }
