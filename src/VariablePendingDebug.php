@@ -68,7 +68,7 @@ class VariablePendingDebug
 
     public function includeClassPropertiesForLaravelModel(): static
     {
-        $this->variableDebugConfigBuilder->withClassPropertiesForLaravel();
+        $this->variableDebugConfigBuilder->extendClassPropertiesForLaravel();
 
         return $this;
     }

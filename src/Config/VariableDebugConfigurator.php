@@ -2,6 +2,7 @@
 
 namespace lightla\VariableDebugger\Config;
 
+use lightla\VariableDebugger\Adapters\Laravel\VariableDebugClassPropertyPluginLaravelPlugin;
 use lightla\VariableDebugger\Adapters\Laravel\VariableDebugPropertyLaravel;
 use lightla\VariableDebugger\DebugStrategy\Cli\VariableDebugCliColorTheme;
 
@@ -126,10 +127,11 @@ class VariableDebugConfigurator
         return $this;
     }
 
-    public function withClassPropertiesForLaravel(): self
+    public function extendClassPropertiesForLaravel(): self
     {
-        $this->includedClassProperties[\Illuminate\Database\Eloquent\Model::class]
-            = VariableDebugPropertyLaravel::getPropertiesForLaravelEloquentModel();
+        $plugin = new VariableDebugClassPropertyPluginLaravelPlugin();
+
+        $plugin->extendClassProperties($this);
 
         return $this;
     }
