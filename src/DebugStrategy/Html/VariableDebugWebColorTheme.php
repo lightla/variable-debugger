@@ -30,13 +30,13 @@ class VariableDebugWebColorTheme
         $t->background  = "#2d2d2d";
         $t->text        = "#a5a5a5";
         $t->border      = "#555";
-        $t->filePath    = "#9cdcfe";
-        $t->lineNumber  = "#9cdcfe";
+        $t->filePath    = "#72c3e3";
+        $t->lineNumber  = "#72c3e3";
         $t->type        = "#4ec9b0";
         $t->string      = "#ce9178";
         $t->number      = "#b5cea8";
         $t->boolNull    = "#569cd6";
-        $t->key         = "#9cdcfe";
+        $t->key         = "#72c3e3";
         $t->className   = "#c586c0";
         $t->visibility  = "#c586c0";
         $t->punctuation = "#d4d4d4";

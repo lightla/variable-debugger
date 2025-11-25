@@ -237,7 +237,7 @@ class VariableDebugConfigurator
 
     public function useWebThemeDark(): self
     {
-        return $this->useCliTheme(VariableDebugCliColorTheme::dark());
+        return $this->useWebTheme(VariableDebugWebColorTheme::dark());
     }
 
     public function useWebThemeLight(): self
