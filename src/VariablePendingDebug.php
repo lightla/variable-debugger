@@ -37,16 +37,16 @@ class VariablePendingDebug
         $this->variableDebugConfig = $config;
     }
 
-    public function onShort(?int $maxDepth = null, ?bool $showArrayOnlyFirstElement = null): static
+    public function presetCompact(?int $maxDepth = null, ?bool $showArrayOnlyFirstElement = null): static
     {
-        $this->variableDebugConfigBuilder->configShort($maxDepth, $showArrayOnlyFirstElement);
+        $this->variableDebugConfigBuilder->presetCompact($maxDepth, $showArrayOnlyFirstElement);
 
         return $this;
     }
 
-    public function onFull(?int $maxDepth = null, bool $showArrayOnlyFirstElement = false): static
+    public function presetDetailed(?int $maxDepth = null, bool $showArrayOnlyFirstElement = false): static
     {
-        $this->variableDebugConfigBuilder->configFull($maxDepth, $showArrayOnlyFirstElement);
+        $this->variableDebugConfigBuilder->presetDetailed($maxDepth, $showArrayOnlyFirstElement);
 
         return $this;
     }
@@ -98,6 +98,13 @@ class VariablePendingDebug
     public function maxDepth(int $maxDepth): static
     {
         $this->variableDebugConfigBuilder->withMaxDepth($maxDepth);
+
+        return $this;
+    }
+
+    public function maxLine(int $maxLine): static
+    {
+        $this->variableDebugConfigBuilder->withMaxLine($maxLine);
 
         return $this;
     }

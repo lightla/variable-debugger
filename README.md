@@ -7,8 +7,8 @@ VariableDebuggerLaravelServiceProvider::class
 
 # Global Config
 v_gl_config()
-    ->configShort(15, false)
-    ->configFull(15, false)
+    ->presetCompact(15, false)
+    ->presetDetailed(15, false)
     ->useWebThemeDark()
     ->useCliThemeLight()
 //    ->withProperties() # warning (not use for global config)

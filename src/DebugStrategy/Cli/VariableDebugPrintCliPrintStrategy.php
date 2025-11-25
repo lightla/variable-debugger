@@ -232,7 +232,7 @@ class VariableDebugPrintCliPrintStrategy implements VariableDebugPrintStrategy
         }
 
         if ($excludedCount > 0) {
-            $output .= $newIndent . $colorTheme->comment . "# [{$excludedCount} excluded]" . PHP_EOL;
+            $output .= $newIndent . $colorTheme->comment . "[{$excludedCount} excluded]" . PHP_EOL;
             $lineCount++;
         }
 
@@ -424,11 +424,11 @@ class VariableDebugPrintCliPrintStrategy implements VariableDebugPrintStrategy
             } elseif ($context['hasIncludeAll'] && !empty($context['exclude'])) {
                 $output .= $indent . "  " . $colorTheme->comment . "[Empty] # all properties are excluded" . PHP_EOL;
             } else {
-                $output .= $indent . "  " . $colorTheme->comment . "# No properties" . PHP_EOL;
+                $output .= $indent . "  " . $colorTheme->comment . "# [No properties]" . PHP_EOL;
             }
             $lineCount++;
         } elseif ($excludedCount > 0) {
-            $output .= $indent . "  " . $colorTheme->comment . "# [{$excludedCount} excluded]" . PHP_EOL;
+            $output .= $indent . "  " . $colorTheme->comment . "[{$excludedCount} excluded]" . PHP_EOL;
             $lineCount++;
         }
 

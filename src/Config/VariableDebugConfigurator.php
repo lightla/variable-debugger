@@ -20,12 +20,13 @@ class VariableDebugConfigurator
     protected ?array $includedProperties = null;
     protected ?array $excludedProperties = null;
     protected ?array $includedClassProperties = null;
+
     /**
      * @param int|null $maxDepth
      * @param bool $showArrayOnlyFirstElement
      * @return $this
      */
-    public function configShort(?int $maxDepth = null, ?bool $showArrayOnlyFirstElement = null): static
+    public function presetCompact(?int $maxDepth = null, ?bool $showArrayOnlyFirstElement = null): static
     {
         $this->withMaxDepth($maxDepth)
             ->withShowArrayMode(is_null($showArrayOnlyFirstElement)
@@ -41,7 +42,7 @@ class VariableDebugConfigurator
         return $this;
     }
 
-    public function configFull(?int $maxDepth = null, bool $showArrayOnlyFirstElement = false): static
+    public function presetDetailed(?int $maxDepth = null, bool $showArrayOnlyFirstElement = false): static
     {
         $this->withMaxDepth($maxDepth)
             ->withShowArrayMode(is_null($showArrayOnlyFirstElement)
@@ -67,6 +68,13 @@ class VariableDebugConfigurator
     public function withMaxDepth(?int $maxDepth): self
     {
         $this->maxDepth = $maxDepth;
+
+        return $this;
+    }
+
+    public function withMaxLine(?int $maxLine): self
+    {
+        $this->maxLine = $maxLine;
 
         return $this;
     }
@@ -139,31 +147,31 @@ class VariableDebugConfigurator
         return $this->addClassPropertiesFromPlugin(new VariableDebugClassPropertyPluginAdapterLaravel());
     }
 
-    public function useCliThemeDark(): self
+    public function useCliTheme(VariableDebugCliColorTheme $theme): self
     {
-        $this->cliTheme = VariableDebugCliColorTheme::dark();
+        $this->cliTheme = $theme;
 
         return $this;
+    }
+
+    public function useCliThemeDark(): self
+    {
+        return $this->useCliTheme(VariableDebugCliColorTheme::dark());
     }
 
     public function useCliThemeLight(): self
     {
-        $this->cliTheme = VariableDebugCliColorTheme::light();
-
-        return $this;
+        return $this->useCliTheme(VariableDebugCliColorTheme::light());
     }
 
     public function useCliThemeNoColor(): self
     {
-        $this->cliTheme = VariableDebugCliColorTheme::noColor();
-
-        return $this;
+        return $this->useCliTheme(VariableDebugCliColorTheme::noColor());
     }
 
     public function useWebThemeDark(): self
     {
         # Comming soon ^^ (always dark)
-
         return $this;
     }
 }

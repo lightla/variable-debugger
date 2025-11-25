@@ -37,7 +37,7 @@ class ConfigurationTest extends TestCase
         $data = ['a', 'b', 'c', 'd', 'e'];
         
         $output = $this->captureOutput(function() use ($data) {
-            v_dump($data)->onShort(null, true);
+            v_dump($data)->presetCompact(null, true);
         });
 
         $this->assertStringContainsString('and', $output);
@@ -61,7 +61,7 @@ class ConfigurationTest extends TestCase
         $data = ['test' => 'value'];
         
         $output = $this->captureOutput(function() use ($data) {
-            v_dump($data)->onShort();
+            v_dump($data)->presetCompact();
         });
 
         $this->assertNotEmpty($output);
@@ -72,7 +72,7 @@ class ConfigurationTest extends TestCase
         $data = ['test' => 'value'];
         
         $output = $this->captureOutput(function() use ($data) {
-            v_dump($data)->onFull();
+            v_dump($data)->presetDetailed();
         });
 
         $this->assertNotEmpty($output);
