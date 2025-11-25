@@ -28,7 +28,7 @@ class VariableDebugWebPrintStrategy implements VariableDebugPrintStrategy
         $fp = $theme->filePath;
 
         if (!$scriptAdded) {
-            echo '<script>function vdToggle(e){const c=e.nextSibling,d=e.querySelector(".vd-dots");if(c.style.display==="none"){c.style.display="";d.textContent=""}else{c.style.display="none";d.textContent="..."}}</script>';
+            echo '<script>function vdToggle(e){const c=e.nextSibling,d=e.querySelector(".vd-dots");if(c.style.display==="none"){c.style.display="";d.innerHTML="&lt;&lt;&lt;"}else{c.style.display="none";d.textContent="..."}}</script>';
             $scriptAdded = true;
         }
 
@@ -79,7 +79,7 @@ class VariableDebugWebPrintStrategy implements VariableDebugPrintStrategy
             if ($count === 0) {
                 $output .= $this->c($theme, $theme->comment, '[]');
             } else {
-                $output .= '<span class="vd-toggle" onclick="vdToggle(this)" style="cursor:pointer;user-select:none;">[<span class="vd-dots"></span></span><span class="vd-content"><br>';
+                $output .= '<span class="vd-toggle" onclick="vdToggle(this)" style="cursor:pointer;user-select:none;">[<span class="vd-dots">&lt;&lt;&lt;</span></span><span class="vd-content"><br>';
                 $lineCount++;
                 $i = 0;
 
@@ -154,7 +154,7 @@ class VariableDebugWebPrintStrategy implements VariableDebugPrintStrategy
             } else {
                 $output .= $this->c($theme, $theme->className, htmlspecialchars($className)) . ' ';
             }
-            $output .= '<span class="vd-toggle" onclick="vdToggle(this)" style="cursor:pointer;user-select:none;">{<span class="vd-dots"></span></span><span class="vd-content"><br>';
+            $output .= '<span class="vd-toggle" onclick="vdToggle(this)" style="cursor:pointer;user-select:none;">{<span class="vd-dots">&lt;&lt;&lt;</span></span><span class="vd-content"><br>';
             $lineCount++;
 
             // Check buildLaterClassProperties
