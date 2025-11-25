@@ -73,7 +73,19 @@ class VariableDebugPrintHtmlPrintStrategy implements VariableDebugPrintStrategy
                 $showKeyOnly = $config->resolveShowKeyOnlyOrDefault();
                 $ignoredShowKeyPaths = $config->resolveIgnoredShowKeyPropertiesOrDefault();
 
+                // Build filter context for array keys
+                $properties = $config->resolveIncludedPropertiesOrDefault();
+                $withoutProperties = $config->resolveExcludedPropertiesOrDefault();
+                $context = $this->buildPropertyContext($properties, $withoutProperties, $propertyPath);
+
+                $excludedCount = 0;
                 foreach ($var as $key => $value) {
+                    // Filter array keys using same logic as object properties
+                    if (!$this->shouldShowProperty((string)$key, $context)) {
+                        $excludedCount++;
+                        continue;
+                    }
+
                     if ($lineCount >= $maxLine) {
                         $remaining = $count - $i;
                         $output .= $indent . '  <span style="color:#808080;">... (and ' . $remaining . ' hidden due to line limit)</span><br>';
@@ -113,6 +125,10 @@ class VariableDebugPrintHtmlPrintStrategy implements VariableDebugPrintStrategy
                         break;
                     }
                 }
+                if ($excludedCount > 0) {
+                    $output .= $newIndent . "<span style='color:#808080;'># [{$excludedCount} excluded]</span><br>";
+                    $lineCount++;
+                }
                 $output .= $indent . ']';
             }
         } elseif (is_object($var)) {
@@ -129,8 +145,14 @@ class VariableDebugPrintHtmlPrintStrategy implements VariableDebugPrintStrategy
             $objectVars = get_object_vars($var);
             $hasAnyProperty = false;
 
-            // Resolve includes/excludes dựa trên class
-            list($properties, $withoutProperties) = $this->resolveIncludesForClass($var, $config);
+            // Nếu đang ở trong path (nested), dùng global properties
+            // Nếu ở root, dùng class-specific rules
+            if ($propertyPath === '') {
+                list($properties, $withoutProperties) = $this->resolveIncludesForClass($var, $config);
+            } else {
+                $properties = $config->resolveIncludedPropertiesOrDefault();
+                $withoutProperties = $config->resolveExcludedPropertiesOrDefault();
+            }
             
             $showKeyOnly = $config->resolveShowKeyOnlyOrDefault();
             $ignoredShowKeyPaths = $config->resolveIgnoredShowKeyPropertiesOrDefault();
@@ -143,6 +165,7 @@ class VariableDebugPrintHtmlPrintStrategy implements VariableDebugPrintStrategy
             // Loop qua class hierarchy và print trực tiếp
             $current = $reflection;
             $printedProps = [];
+            $excludedCount = 0;
 
             while ($current) {
                 if ($lineCount >= $maxLine) {
@@ -158,6 +181,8 @@ class VariableDebugPrintHtmlPrintStrategy implements VariableDebugPrintStrategy
 
                     // Filter using context
                     if (!$this->shouldShowProperty($propName, $context)) {
+                        $printedProps[$propName] = true;
+                        $excludedCount++;
                         continue;
                     }
 
@@ -222,6 +247,7 @@ class VariableDebugPrintHtmlPrintStrategy implements VariableDebugPrintStrategy
 
                 // Filter using context
                 if (!$this->shouldShowProperty($propName, $context)) {
+                    $excludedCount++;
                     continue;
                 }
 
@@ -267,6 +293,9 @@ class VariableDebugPrintHtmlPrintStrategy implements VariableDebugPrintStrategy
                 } else {
                     $output .= $indent . '  <span style="color:#808080;"># No properties</span><br>';
                 }
+                $lineCount++;
+            } elseif ($excludedCount > 0) {
+                $output .= $indent . '  <span style="color:#808080;"># [' . $excludedCount . ' excluded]</span><br>';
                 $lineCount++;
             }
 
