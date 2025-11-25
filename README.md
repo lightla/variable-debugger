@@ -29,6 +29,7 @@ v_dd($u, ['x' => 1, (object)['y' => 1]])
 
 ### FOR ME ####
 
+```aiignore
 ## Cách 1: Git exclude local
 • File .git/info/exclude giống như .gitignore nhưng chỉ tồn tại trên máy bạn
 • Không được commit lên GitHub
@@ -42,3 +43,4 @@ v_dd($u, ['x' => 1, (object)['y' => 1]])
 ./vendor/bin/pest this-library/tests
 ./vendor/bin/phpunit this-library/tests --testdox
 ./vendor/bin/pest this-library/tests --testdox
+```
