@@ -127,7 +127,23 @@ class VariableDebugConfigurator
 
     public function withProperties(?array $properties): self
     {
-        $this->includedProperties = $properties;
+        $normalized = [];
+        
+        foreach ($properties as $property => $value) {
+            if ($value instanceof VariableDebugClassPropertyShowValueMode) {
+                $normalized[$property] = $value;
+                continue;
+            }
+
+            if (is_int($property)) {
+                $normalized[$value] = VariableDebugClassPropertyShowValueMode::SHOW_DETAIL;
+                continue;
+            }
+
+            throw new \RuntimeException("include properties has error occur");
+        }
+
+        $this->includedProperties = $normalized;
 
         return $this;
     }
@@ -141,21 +157,23 @@ class VariableDebugConfigurator
 
     public function addClassProperties(string $className, array $properties): self
     {
+        $normalized = [];
+        
         foreach ($properties as $property => $value) {
             if ($value instanceof VariableDebugClassPropertyShowValueMode) {
-                $properties[$property] = $value;
+                $normalized[$property] = $value;
                 continue;
             }
 
             if (is_int($property)) {
-                $properties[$value] = VariableDebugClassPropertyShowValueMode::SHOW_DETAIL;
+                $normalized[$value] = VariableDebugClassPropertyShowValueMode::SHOW_DETAIL;
                 continue;
             }
 
             throw new \RuntimeException("adding class property {$className} has error occur");
         }
 
-        $this->includedClassProperties[$className] = $properties;
+        $this->includedClassProperties[$className] = $normalized;
 
         return $this;
     }

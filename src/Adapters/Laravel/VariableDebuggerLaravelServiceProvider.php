@@ -63,11 +63,19 @@ class VariableDebuggerLaravelServiceProvider extends ServiceProvider
 
                 public function report(Throwable $e)
                 {
+                    if ($e instanceof VariableDebugGracefulExitException) {
+                        return;
+                    }
+                    
                     $this->originalHandler->report($e);
                 }
 
                 public function shouldReport(Throwable $e)
                 {
+                    if ($e instanceof VariableDebugGracefulExitException) {
+                        return false;
+                    }
+                    
                     return $this->originalHandler->shouldReport($e);
                 }
 

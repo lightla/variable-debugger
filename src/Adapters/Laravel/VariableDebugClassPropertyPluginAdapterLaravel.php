@@ -96,10 +96,11 @@ class VariableDebugClassPropertyPluginAdapterLaravel implements VariableDebugCla
             'expandRelationships',
             'excludeRelationships',
             'connection',
+            'faker' => VariableDebugClassPropertyShowValueMode::SHOW_TYPE_ONLY,
         ];
     }
 
-    private static function getPropertiesForLaravelDatabaseQueryBuilder()
+    private static function getPropertiesForLaravelDatabaseQueryBuilder(): array
     {
         return [
             'connection' => VariableDebugClassPropertyShowValueMode::SHOW_TYPE_ONLY,

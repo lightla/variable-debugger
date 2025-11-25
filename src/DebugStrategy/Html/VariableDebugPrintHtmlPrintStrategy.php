@@ -231,7 +231,8 @@ class VariableDebugPrintHtmlPrintStrategy implements VariableDebugPrintStrategy
                                 $propValue = $prop->getValue($var);
                                 
                                 // Check property show value mode từ classIncludes
-                                $showValueMode = $this->getPropertyShowValueMode($var, $propName, $classIncludes, $config);
+                                $fullPath = $this->getNextPath($propertyPath, $propName);
+                                $showValueMode = $this->getPropertyShowValueMode($var, $propName, $fullPath, $classIncludes, $config);
                                 
                                 if ($showValueMode->isShowTypeOnly()) {
                                     // Chỉ show type
@@ -301,7 +302,8 @@ class VariableDebugPrintHtmlPrintStrategy implements VariableDebugPrintStrategy
                     $output .= '<br>';
                 } else {
                     // Check property show value mode từ classIncludes
-                    $showValueMode = $this->getPropertyShowValueMode($var, $propName, $classIncludes, $config);
+                    $fullPath = $this->getNextPath($propertyPath, $propName);
+                    $showValueMode = $this->getPropertyShowValueMode($var, $propName, $fullPath, $classIncludes, $config);
                     
                     if ($showValueMode->isShowTypeOnly()) {
                         // Chỉ show type
@@ -398,6 +400,26 @@ class VariableDebugPrintHtmlPrintStrategy implements VariableDebugPrintStrategy
     }
 
     /**
+     * Extract property paths from properties array
+     * Input: ['field1' => SHOW_DETAIL, 'field2' => SHOW_TYPE_ONLY] hoặc ['field1', 'field2']
+     * Output: ['field1', 'field2']
+     */
+    private function extractPropertyPaths(array $properties): array
+    {
+        $paths = [];
+        foreach ($properties as $key => $value) {
+            if ($value instanceof \lightla\VariableDebugger\Config\VariableDebugClassPropertyShowValueMode) {
+                // Key là property path
+                $paths[] = $key;
+            } else {
+                // Value là property path (numeric key)
+                $paths[] = $value;
+            }
+        }
+        return $paths;
+    }
+
+    /**
      * Resolve includes/excludes cho object dựa trên class
      */
     private function resolveIncludesForClass(object $var, VariableDebugConfig $config): array
@@ -451,6 +473,9 @@ class VariableDebugPrintHtmlPrintStrategy implements VariableDebugPrintStrategy
 
     private function buildPropertyContext(array $properties, array $withoutProperties, string $currentPath = ''): array
     {
+        // Normalize properties: extract keys only (property paths)
+        $properties = $this->extractPropertyPaths($properties);
+        
         $hasIncludeAll = empty($properties);
         
         // Optimize paths
@@ -626,27 +651,41 @@ class VariableDebugPrintHtmlPrintStrategy implements VariableDebugPrintStrategy
     
     private function getPropertyShowValueMode(
         object $var, 
-        string $propName, 
+        string $propName,
+        string $fullPath,
         ?array $classIncludes, 
         VariableDebugConfig $config
     ): \lightla\VariableDebugger\Config\VariableDebugClassPropertyShowValueMode {
-        // Nếu không có classIncludes, return SHOW_DETAIL
-        if ($classIncludes === null) {
-            return \lightla\VariableDebugger\Config\VariableDebugClassPropertyShowValueMode::SHOW_DETAIL;
-        }
+        // Step 1: Get mode from class-specific properties
+        $mode = \lightla\VariableDebugger\Config\VariableDebugClassPropertyShowValueMode::SHOW_DETAIL;
         
-        // Lấy full classProperties từ config
         $allClassProperties = $config->resolveIncludedClassPropertiesOrDefault();
-        
         foreach ($allClassProperties as $className => $properties) {
-            if ($var instanceof $className) {
-                // Properties đã được normalize trong addClassProperties
-                // Dạng: ['field1' => SHOW_DETAIL, 'field2' => SHOW_TYPE_ONLY]
-                return $properties[$propName] ?? \lightla\VariableDebugger\Config\VariableDebugClassPropertyShowValueMode::SHOW_DETAIL;
+            if ($var instanceof $className && isset($properties[$propName])) {
+                $mode = $properties[$propName];
+                break;
             }
         }
         
-        return \lightla\VariableDebugger\Config\VariableDebugClassPropertyShowValueMode::SHOW_DETAIL;
+        // Step 2: Global properties decorate/override
+        $globalProperties = $config->resolveIncludedPropertiesOrDefault();
+        
+        // Check exact match với full path
+        if (isset($globalProperties[$fullPath])) {
+            $value = $globalProperties[$fullPath];
+            if ($value instanceof \lightla\VariableDebugger\Config\VariableDebugClassPropertyShowValueMode) {
+                $mode = $value; // Override
+            }
+        }
+        // Check với property name đơn (nếu là root level)
+        else if (isset($globalProperties[$propName])) {
+            $value = $globalProperties[$propName];
+            if ($value instanceof \lightla\VariableDebugger\Config\VariableDebugClassPropertyShowValueMode) {
+                $mode = $value; // Override
+            }
+        }
+        
+        return $mode;
     }
     
     private function formatTypeOnly(mixed $value): string
