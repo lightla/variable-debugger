@@ -13,6 +13,7 @@ class VariableDebugWebPrintStrategy implements VariableDebugPrintStrategy
         ...$vars
     ): void
     {
+        static $scriptAdded = false;
         $theme = $config->resolveWebThemeOrDefault();
         
         $caller = $backtrace[0];
@@ -25,6 +26,11 @@ class VariableDebugWebPrintStrategy implements VariableDebugPrintStrategy
         $txt = $theme->text;
         $bdr = $theme->border;
         $fp = $theme->filePath;
+
+        if (!$scriptAdded) {
+            echo '<script>function vdToggle(e){const c=e.nextSibling,d=e.querySelector(".vd-dots");if(c.style.display==="none"){c.style.display="";d.textContent=""}else{c.style.display="none";d.textContent="..."}}</script>';
+            $scriptAdded = true;
+        }
 
         echo "<div style=\"background:{$bg};color:{$txt};padding:15px;margin:15px 0;border:1px solid {$bdr};font-family:Consolas,Monaco,monospace;font-size:12px;z-index:99999;\">";
         echo "<div style=\"border-bottom:1px solid {$bdr};padding-bottom:10px;margin-bottom:10px;color:{$fp};\">";
@@ -73,7 +79,7 @@ class VariableDebugWebPrintStrategy implements VariableDebugPrintStrategy
             if ($count === 0) {
                 $output .= $this->c($theme, $theme->comment, '[]');
             } else {
-                $output .= '[<br>';
+                $output .= '<span class="vd-toggle" onclick="vdToggle(this)" style="cursor:pointer;user-select:none;">[<span class="vd-dots"></span></span><span class="vd-content"><br>';
                 $lineCount++;
                 $i = 0;
 
@@ -137,17 +143,18 @@ class VariableDebugWebPrintStrategy implements VariableDebugPrintStrategy
                     $output .= $newIndent . $this->c($theme, $theme->comment, "# [{$excludedCount} excluded]") . '<br>';
                     $lineCount++;
                 }
-                $output .= $indent . ']';
+                $output .= $indent . '</span>]';
             }
         } elseif (is_object($var)) {
             $reflection = new \ReflectionClass($var);
             $className = $reflection->getName();
 
             if ($config->getShowValueType()) {
-                $output .= $this->c($theme, $theme->type, 'object') . '(' . $this->c($theme, $theme->className, htmlspecialchars($className)) . ') {<br>';
+                $output .= $this->c($theme, $theme->type, 'object') . '(' . $this->c($theme, $theme->className, htmlspecialchars($className)) . ') ';
             } else {
-                $output .= $this->c($theme, $theme->className, htmlspecialchars($className)) . ' {<br>';
+                $output .= $this->c($theme, $theme->className, htmlspecialchars($className)) . ' ';
             }
+            $output .= '<span class="vd-toggle" onclick="vdToggle(this)" style="cursor:pointer;user-select:none;">{<span class="vd-dots"></span></span><span class="vd-content"><br>';
             $lineCount++;
 
             // Check buildLaterClassProperties
@@ -364,7 +371,7 @@ class VariableDebugWebPrintStrategy implements VariableDebugPrintStrategy
                 $lineCount++;
             }
 
-            $output .= $indent . '}';
+            $output .= $indent . '</span>}';
         } elseif (is_string($var)) {
             $len = strlen($var);
             if ($config->getShowValueType()) {
