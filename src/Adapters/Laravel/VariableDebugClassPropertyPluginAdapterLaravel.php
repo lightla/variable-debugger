@@ -2,12 +2,12 @@
 
 namespace lightla\VariableDebugger\Adapters\Laravel;
 
-use lightla\VariableDebugger\Adapters\VariableDebugAdapterClassPropertyPlugin;
+use lightla\VariableDebugger\Adapters\VariableDebugClassPropertyPluginAdapter;
 use lightla\VariableDebugger\Config\VariableDebugConfigurator;
 
-class VariableDebugClassPropertyPluginLaravelPlugin implements VariableDebugAdapterClassPropertyPlugin
+class VariableDebugClassPropertyPluginAdapterLaravel implements VariableDebugClassPropertyPluginAdapter
 {
-    public function extendClassProperties(
+    public function applyTo(
         VariableDebugConfigurator $configurator
     ): void
     {

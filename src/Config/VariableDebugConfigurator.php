@@ -2,8 +2,9 @@
 
 namespace lightla\VariableDebugger\Config;
 
-use lightla\VariableDebugger\Adapters\Laravel\VariableDebugClassPropertyPluginLaravelPlugin;
+use lightla\VariableDebugger\Adapters\Laravel\VariableDebugClassPropertyPluginAdapterLaravel;
 use lightla\VariableDebugger\Adapters\Laravel\VariableDebugPropertyLaravel;
+use lightla\VariableDebugger\Adapters\VariableDebugClassPropertyPluginAdapter;
 use lightla\VariableDebugger\DebugStrategy\Cli\VariableDebugCliColorTheme;
 
 class VariableDebugConfigurator
@@ -127,13 +128,16 @@ class VariableDebugConfigurator
         return $this;
     }
 
-    public function extendClassPropertiesForLaravel(): self
+    public function addClassPropertiesFromPlugin(VariableDebugClassPropertyPluginAdapter $plugin): self
     {
-        $plugin = new VariableDebugClassPropertyPluginLaravelPlugin();
-
-        $plugin->extendClassProperties($this);
+        $plugin->applyTo($this);
 
         return $this;
+    }
+
+    public function addClassPropertiesFromPluginLaravel(): self
+    {
+        return $this->addClassPropertiesFromPlugin(new VariableDebugClassPropertyPluginAdapterLaravel());
     }
 
     public function useCliThemeDark(): self
