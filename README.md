@@ -15,6 +15,11 @@ v_gl_config()
     ->addClassProperties(\App\Models\User::class, ['attributes'])
     ->addClassPropertiesFromPluginLaravel()
     ->addClassPropertiesFromPluginPDO()
+    ->addBuildLaterClassProperties(\App\Models\User::class, function (\App\Models\User $user) {
+        return [
+            'attributes' => $user->getAttributes(),
+        ]       
+    })
     // ->addClassPropertiesFromPlugin(
     //      new VariableDebugClassPropertyPluginAdapterLaravel
     //  );
