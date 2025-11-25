@@ -87,4 +87,18 @@ class VariablePendingDebug
 
         return $this;
     }
+
+    public function maxDepth(int $maxDepth): static
+    {
+        $this->variableDebugConfigBuilder->withMaxDepth($maxDepth);
+
+        return $this;
+    }
+
+    public function showValueType(bool $showValueType): static
+    {
+        $this->variableDebugConfigBuilder->withShowValueType($showValueType);
+
+        return $this;
+    }
 }

@@ -26,18 +26,7 @@ v_dd($u, ['x' => 1, (object)['y' => 1]])
 ;
 ```
 
-
-   
-
-
-
-
-
-
-
-
-
-### FOR ME (not for you) ####
+### FOR ME ####
 
 ## Cách 1: Git exclude local
 • File .git/info/exclude giống như .gitignore nhưng chỉ tồn tại trên máy bạn
