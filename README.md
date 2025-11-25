@@ -8,6 +8,7 @@ v_gl_config()
     ->configFull(15, false)
     ->useWebThemeDark()
     ->useCliThemeLight()
+    ->withClassProperties(\App\Models\User::class, ['attributes'])
     ->addClassPropertiesFromPluginLaravel()
     // ->addClassPropertiesFromPlugin(
     //      new VariableDebugClassPropertyPluginAdapterLaravel
