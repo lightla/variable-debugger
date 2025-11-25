@@ -32,6 +32,8 @@ class VariableDebuggerLaravelServiceProvider extends ServiceProvider
                 $exceptions->render(function (VariableDebugGracefulExitException $e) {
                     return response('', 200);
                 });
+
+                $exceptions->dontReport(VariableDebugGracefulExitException::class);
             })(new Exceptions($handler)),
         );
     }
@@ -66,7 +68,7 @@ class VariableDebuggerLaravelServiceProvider extends ServiceProvider
                     if ($e instanceof VariableDebugGracefulExitException) {
                         return;
                     }
-                    
+
                     $this->originalHandler->report($e);
                 }
 
@@ -75,7 +77,7 @@ class VariableDebuggerLaravelServiceProvider extends ServiceProvider
                     if ($e instanceof VariableDebugGracefulExitException) {
                         return false;
                     }
-                    
+
                     return $this->originalHandler->shouldReport($e);
                 }
 
