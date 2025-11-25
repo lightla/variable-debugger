@@ -267,22 +267,18 @@ class VariableDebugPrintCliPrintStrategy implements VariableDebugPrintStrategy
         $objectVars = get_object_vars($var);
         $hasAnyProperty = false;
 
-        // Nếu đang ở trong path (nested), dùng global properties
-        // Nếu ở root, dùng class-specific rules
-        if ($propertyPath === '') {
-            list($properties, $withoutProperties) = $this->resolveIncludesForClass($var, $config);
-        } else {
-            $properties = $config->resolveIncludedPropertiesOrDefault();
-            $withoutProperties = $config->resolveExcludedPropertiesOrDefault();
-        }
+        // Class filter luôn áp dụng cho object thuộc class đó (object = root của chính nó)
+        $classIncludes = $this->getClassSpecificIncludes($var, $config);
+        
+        // Get global includes/excludes
+        $globalIncludes = $config->resolveIncludedPropertiesOrDefault();
+        $globalExcludes = $config->resolveExcludedPropertiesOrDefault();
         
         $showKeyOnly = $config->resolveShowKeyOnlyOrDefault();
         $ignoredShowKeyPaths = $config->resolveIgnoredShowKeyPropertiesOrDefault();
-
-        // Build context for current path
-        $context = $this->buildPropertyContext($properties, $withoutProperties, $propertyPath);
         
-        $hasConflict = $context['isConflictShow'] && $propertyPath === '';
+        // Conflict check
+        $hasConflict = $classIncludes !== null && empty($classIncludes);
 
         // Loop qua class hierarchy và print trực tiếp
         $current = $ref;
@@ -301,8 +297,16 @@ class VariableDebugPrintCliPrintStrategy implements VariableDebugPrintStrategy
                     continue;
                 }
 
-                // Filter using context
-                if (!$this->shouldShowProperty($propName, $context)) {
+                // Step 1: Class-specific filter
+                if ($classIncludes !== null && !in_array($propName, $classIncludes)) {
+                    $printedProps[$propName] = true;
+                    $excludedCount++;
+                    continue;
+                }
+                
+                // Step 2: Global filter (check từ propertyPath của object, không phải từ root)
+                $objectPropertyPath = $propName; // Property path bắt đầu từ object này
+                if (!$this->shouldShowPropertyGlobalFromObjectRoot($objectPropertyPath, $propertyPath, $globalIncludes, $globalExcludes)) {
                     $printedProps[$propName] = true;
                     $excludedCount++;
                     continue;
@@ -326,7 +330,7 @@ class VariableDebugPrintCliPrintStrategy implements VariableDebugPrintStrategy
                         . $colorTheme->visibility . $visibility . " "
                         . $colorTheme->key . $prop->getName();
                     
-                    $nextPath = $this->getNextPath($propertyPath, $propName);
+                    $nextPath = $propName; // Start from property name
                     if ($this->shouldShowValue($showKeyOnly, $ignoredShowKeyPaths, $nextPath)) {
                         $output .= $colorTheme->punctuation . ": ";
                     }
@@ -338,13 +342,13 @@ class VariableDebugPrintCliPrintStrategy implements VariableDebugPrintStrategy
                         . $colorTheme->visibility . $visibility . " "
                         . $colorTheme->key . $prop->getName();
                     
-                    $nextPath = $this->getNextPath($propertyPath, $propName);
+                    $nextPath = $propName; // Start from property name
                     if ($this->shouldShowValue($showKeyOnly, $ignoredShowKeyPaths, $nextPath)) {
                         $output .= $colorTheme->punctuation . ": ";
                     }
                 }
 
-                $nextPath = $this->getNextPath($propertyPath, $propName);
+                $nextPath = $propName; // Start from property name
                 if (!$this->shouldShowValue($showKeyOnly, $ignoredShowKeyPaths, $nextPath)) {
                     $output .= PHP_EOL;
                     $lineCount++;
@@ -354,8 +358,10 @@ class VariableDebugPrintCliPrintStrategy implements VariableDebugPrintStrategy
                 } else {
                     try {
                         $value = $prop->getValue($var);
+                        // Use full path for nested filtering (global includes/excludes)
+                        $fullPath = $this->getNextPath($propertyPath, $propName);
                         $output .= $this->formatVariable(
-                                $config, $colorTheme, $value, $depth + 1, $indent . "  ", $lineCount, $nextPath
+                                $config, $colorTheme, $value, $depth + 1, $indent . "  ", $lineCount, $fullPath
                             )
                             . PHP_EOL;
                     } catch (\Throwable $e) {
@@ -374,8 +380,15 @@ class VariableDebugPrintCliPrintStrategy implements VariableDebugPrintStrategy
                 continue;
             }
 
-            // Filter using context
-            if (!$this->shouldShowProperty($propName, $context)) {
+            // Step 1: Class-specific filter
+            if ($classIncludes !== null && !in_array($propName, $classIncludes)) {
+                $excludedCount++;
+                continue;
+            }
+            
+            // Step 2: Global filter
+            $objectPropertyPath = $propName;
+            if (!$this->shouldShowPropertyGlobalFromObjectRoot($objectPropertyPath, $propertyPath, $globalIncludes, $globalExcludes)) {
                 $excludedCount++;
                 continue;
             }
@@ -387,7 +400,7 @@ class VariableDebugPrintCliPrintStrategy implements VariableDebugPrintStrategy
                 return $output . $indent . $colorTheme->punctuation . "}";
             }
 
-            $nextPath = $this->getNextPath($propertyPath, $propName);
+            $nextPath = $propName; // Start from property name
             
             if ($config->getShowDetailAccessModifiers()) {
                 $output .= $indent . "  "
@@ -410,8 +423,9 @@ class VariableDebugPrintCliPrintStrategy implements VariableDebugPrintStrategy
             if (!$this->shouldShowValue($showKeyOnly, $ignoredShowKeyPaths, $nextPath)) {
                 $output .= PHP_EOL;
             } else {
+                $fullPath = $this->getNextPath($propertyPath, $propName);
                 $output .= $this->formatVariable(
-                        $config, $colorTheme, $propValue, $depth + 1, $indent . "  ", $lineCount, $nextPath
+                        $config, $colorTheme, $propValue, $depth + 1, $indent . "  ", $lineCount, $fullPath
                     )
                     . PHP_EOL;
             }
@@ -421,8 +435,6 @@ class VariableDebugPrintCliPrintStrategy implements VariableDebugPrintStrategy
         if (!$hasAnyProperty) {
             if ($hasConflict) {
                 $output .= $indent . "  " . $colorTheme->comment . "[Empty] # excluded properties contain all included properties" . PHP_EOL;
-            } elseif ($context['hasIncludeAll'] && !empty($context['exclude'])) {
-                $output .= $indent . "  " . $colorTheme->comment . "[Empty] # all properties are excluded" . PHP_EOL;
             } else {
                 $output .= $indent . "  " . $colorTheme->comment . "# [No properties]" . PHP_EOL;
             }
@@ -471,6 +483,119 @@ class VariableDebugPrintCliPrintStrategy implements VariableDebugPrintStrategy
         }
 
         return $result;
+    }
+
+    /**
+     * Check global filter từ object root
+     * VD: propertyPath = '0', objectPropertyPath = 'items' 
+     * → check cả '0.items' (full path) và 'items' (từ object root)
+     */
+    private function shouldShowPropertyGlobalFromObjectRoot(
+        string $objectPropertyPath, 
+        string $propertyPath, 
+        array $globalIncludes, 
+        array $globalExcludes
+    ): bool {
+        // Build full path từ root
+        $fullPath = $this->getNextPath($propertyPath, $objectPropertyPath);
+        
+        // Check global filter với full path
+        $context = $this->buildPropertyContext($globalIncludes, $globalExcludes, $propertyPath);
+        
+        return $this->shouldShowProperty($objectPropertyPath, $context);
+    }
+
+    /**
+     * Check if property should be shown based on global includes/excludes
+     */
+    private function shouldShowPropertyGlobal(string $fullPath, array $globalIncludes, array $globalExcludes): bool
+    {
+        // Build context for this path
+        $context = $this->buildPropertyContext($globalIncludes, $globalExcludes, dirname($fullPath) === '.' ? '' : dirname($fullPath));
+        $propName = basename($fullPath);
+        
+        return $this->shouldShowProperty($propName, $context);
+    }
+
+    /**
+     * Get class-specific includes (chỉ root-level properties)
+     */
+    private function getClassSpecificIncludes(object $var, VariableDebugConfig $config): ?array
+    {
+        $classIncludes = $config->resolveIncludedClassPropertiesOrDefault();
+        
+        foreach ($classIncludes as $className => $paths) {
+            if ($var instanceof $className) {
+                // Extract root properties only
+                $rootProps = [];
+                foreach ($paths as $path) {
+                    $parts = explode('.', $path);
+                    $rootProps[] = $parts[0];
+                }
+                return array_unique($rootProps);
+            }
+        }
+        
+        return null;
+    }
+
+    /**
+     * Build context for root properties (class-specific)
+     */
+    private function buildRootPropertyContext(?array $classIncludes): array
+    {
+        if ($classIncludes === null) {
+            // No class-specific rules → show all
+            return [
+                'include' => [],
+                'exclude' => [],
+                'hasIncludeAll' => true,
+                'isConflictShow' => false
+            ];
+        }
+        
+        // Has class-specific includes
+        $include = [];
+        foreach ($classIncludes as $prop) {
+            $include[$prop] = true;
+        }
+        
+        return [
+            'include' => $include,
+            'exclude' => [],
+            'hasIncludeAll' => false,
+            'isConflictShow' => empty($include)
+        ];
+    }
+
+    /**
+     * Resolve root properties cho object (chỉ lấy root-level từ class includes)
+     */
+    private function resolveRootPropertiesForClass(object $var, VariableDebugConfig $config): array
+    {
+        $classIncludes = $config->resolveIncludedClassPropertiesOrDefault();
+        
+        // Tìm class-specific includes
+        $specificIncludes = null;
+        foreach ($classIncludes as $className => $paths) {
+            if ($var instanceof $className) {
+                $specificIncludes = $paths;
+                break;
+            }
+        }
+        
+        // Nếu có class-specific includes, chỉ lấy root-level properties
+        if ($specificIncludes !== null) {
+            $rootProps = [];
+            foreach ($specificIncludes as $path) {
+                $parts = explode('.', $path);
+                $rootProps[] = $parts[0]; // Chỉ lấy phần đầu
+            }
+            return [array_unique($rootProps), []];
+        }
+        
+        // Không có class-specific → return empty (show all)
+        return [[], []];
     }
 
     /**
