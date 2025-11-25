@@ -1,8 +1,8 @@
 <?php
 namespace lightla\VariableDebugger;
 
-use lightla\VariableDebugger\DebugStrategy\Cli\VariableDebugPrintCliPrintStrategy;
-use lightla\VariableDebugger\DebugStrategy\Html\VariableDebugPrintHtmlPrintStrategy;
+use lightla\VariableDebugger\DebugStrategy\Cli\VariableDebugCliPrintStrategy;
+use lightla\VariableDebugger\DebugStrategy\Html\VariableDebugWebPrintStrategy;
 use lightla\VariableDebugger\Exceptions\VariableDebugGracefulExitException;
 
 class VariableDebugger
@@ -48,8 +48,8 @@ class VariableDebugger
         $isCli = (PHP_SAPI === 'cli');
 
         $this->printStrategy = $isCli
-            ? new VariableDebugPrintCliPrintStrategy()
-            : new VariableDebugPrintHtmlPrintStrategy();
+            ? new VariableDebugCliPrintStrategy()
+            : new VariableDebugWebPrintStrategy();
 
         return $this;
     }

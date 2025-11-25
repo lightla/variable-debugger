@@ -5,6 +5,7 @@ namespace lightla\VariableDebugger;
 use lightla\VariableDebugger\Config\VariableDebugConfigArrayShowMode;
 use lightla\VariableDebugger\Config\VariableDebugConfigBuilder;
 use lightla\VariableDebugger\DebugStrategy\Cli\VariableDebugCliColorTheme;
+use lightla\VariableDebugger\DebugStrategy\Html\VariableDebugWebColorTheme;
 
 class VariableDebugConfig
 {
@@ -17,20 +18,21 @@ class VariableDebugConfig
     private const DEFAULT_SHOW_EXCLUDED_COUNT = true;
 
     public function __construct(
-        private ?string $projectRootPath = '',
-        private ?int $maxDepth = null,
-        private ?int $maxLine = null,
+        private ?string                           $projectRootPath = '',
+        private ?int                              $maxDepth = null,
+        private ?int                              $maxLine = null,
         private ?VariableDebugConfigArrayShowMode $showArrayMode = null,
-        private ?bool $showValueType = null,
-        private ?bool $showDetailAccessModifiers = null,
-        private ?bool $showKeyOnly = null,
-        private ?array $ignoredShowKeyProperties = null,
-        private ?VariableDebugCliColorTheme $cliTheme = null,
-        private ?array $includedProperties = [],
-        private ?array $excludedProperties = [],
-        private ?bool $showExcludedCount = null,
-        private ?array $includedClassProperties = [],
-        private ?array $includedBuildLaterClassProperties = [],
+        private ?bool                             $showValueType = null,
+        private ?bool                             $showDetailAccessModifiers = null,
+        private ?bool                             $showKeyOnly = null,
+        private ?array                            $ignoredShowKeyProperties = null,
+        private ?VariableDebugCliColorTheme       $cliTheme = null,
+        private ?VariableDebugWebColorTheme       $webTheme = null,
+        private ?array                            $includedProperties = [],
+        private ?array                            $excludedProperties = [],
+        private ?bool                             $showExcludedCount = null,
+        private ?array                            $includedClassProperties = [],
+        private ?array                            $includedBuildLaterClassProperties = [],
     )
     {
     }
@@ -155,11 +157,27 @@ class VariableDebugConfig
     }
 
     /**
+     * @return VariableDebugWebColorTheme|null
+     */
+    public function getWebTheme(): ?VariableDebugWebColorTheme
+    {
+        return $this->webTheme;
+    }
+
+    /**
      * @return VariableDebugCliColorTheme
      */
     public function resolveCliThemeOrDefault(): VariableDebugCliColorTheme
     {
         return $this->cliTheme ?? VariableDebugCliColorTheme::noColor();
+    }
+
+    /**
+     * @return VariableDebugWebColorTheme
+     */
+    public function resolveWebThemeOrDefault(): VariableDebugWebColorTheme
+    {
+        return $this->webTheme ?? VariableDebugWebColorTheme::dark();
     }
 
     /**
@@ -266,6 +284,7 @@ class VariableDebugConfig
             $this->showKeyOnly ?? $config?->getShowKeyOnly(),
             $this->ignoredShowKeyProperties ?? $config?->getIgnoredShowKeyProperties(),
             $this->cliTheme ?? $config?->getCliTheme(),
+            $this->webTheme ?? $config?->getWebTheme(),
             $this->includedProperties ?? $config?->getIncludedProperties(),
             $this->excludedProperties ?? $config?->getExcludedProperties(),
             $this->showExcludedCount ?? $config?->getShowExcludedCount(),

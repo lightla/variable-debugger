@@ -18,6 +18,7 @@ trait VariableDebugConfigBuilderBuildTrait
             $this->showKeyOnly,
             $this->ignoredShowKeyProperties,
             $this->cliTheme,
+            $this->webTheme,
             $this->includedProperties,
             $this->excludedProperties,
             $this->showExcludedCount,

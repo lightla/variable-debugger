@@ -5,7 +5,7 @@ namespace lightla\VariableDebugger\DebugStrategy\Html;
 use lightla\VariableDebugger\VariableDebugConfig;
 use lightla\VariableDebugger\VariableDebugPrintStrategy;
 
-class VariableDebugPrintHtmlPrintStrategy implements VariableDebugPrintStrategy
+class VariableDebugWebPrintStrategy implements VariableDebugPrintStrategy
 {
     public function printFromTrace(
         VariableDebugConfig $config,
@@ -13,20 +13,27 @@ class VariableDebugPrintHtmlPrintStrategy implements VariableDebugPrintStrategy
         ...$vars
     ): void
     {
+        $theme = $config->resolveWebThemeOrDefault();
+        
         $caller = $backtrace[0];
         $caller['file'] = $this->calculateFilePathWithoutProjectRootPath($config, $caller['file']);
 
         $file = htmlspecialchars($caller['file']);
         $line = htmlspecialchars($caller['line']);
 
-        echo '<div style="background:#2d2d2d;color:#a5a5a5;padding:15px;margin:15px 0;border:1px solid #555;font-family:Consolas,Monaco,monospace;font-size:12px;z-index:99999;">';
-        echo '<div style="border-bottom:1px solid #555;padding-bottom:10px;margin-bottom:10px;color:#9cdcfe;">';
+        $bg = $theme->background;
+        $txt = $theme->text;
+        $bdr = $theme->border;
+        $fp = $theme->filePath;
+
+        echo "<div style=\"background:{$bg};color:{$txt};padding:15px;margin:15px 0;border:1px solid {$bdr};font-family:Consolas,Monaco,monospace;font-size:12px;z-index:99999;\">";
+        echo "<div style=\"border-bottom:1px solid {$bdr};padding-bottom:10px;margin-bottom:10px;color:{$fp};\">";
         echo "<strong>📁/</strong>{$file}:{$line}<br>";
         echo '</div>';
 
         $lineCount = 0;
         foreach ($vars as $var) {
-            echo '<div style="margin:10px 0;padding:10px;border:1px solid #555;">';
+            echo "<div style=\"margin:10px 0;padding:10px;border:1px solid {$bdr};\">";
             echo '<pre style="margin:0;font-family:inherit;white-space:pre-wrap;">';
             echo $this->formatVariable($config, $var, 0, '', $lineCount);
             echo '</pre>';
@@ -44,26 +51,27 @@ class VariableDebugPrintHtmlPrintStrategy implements VariableDebugPrintStrategy
         string $propertyPath = ''
     ): string
     {
+        $theme = $config->resolveWebThemeOrDefault();
         $output = '';
         $maxDepth = $config->resolveMaxDepthOrDefault();
         $maxLine = $config->resolveMaxLineOrDefault();
 
         if ($lineCount >= $maxLine) {
-            return '<span style="color:#808080;">[Output Truncated]</span>';
+            return $this->c($theme, $theme->comment, '[Output Truncated]');
         }
 
         if ($depth >= $maxDepth) {
-            return '<span style="color:#808080;">[Max Depth Reached]</span>';
+            return $this->c($theme, $theme->comment, '[Max Depth Reached]');
         }
 
         if (is_array($var)) {
             $count = count($var);
             if ($config->getShowValueType()) {
-                $output .= '<span style="color:#4ec9b0;">array</span>(<span style="color:#b5cea8;">' . $count . '</span>) ';
+                $output .= $this->c($theme, $theme->type, 'array') . '(' . $this->c($theme, $theme->number, (string)$count) . ') ';
             }
 
             if ($count === 0) {
-                $output .= '<span style="color:#808080;">[]</span>';
+                $output .= $this->c($theme, $theme->comment, '[]');
             } else {
                 $output .= '[<br>';
                 $lineCount++;
@@ -88,7 +96,7 @@ class VariableDebugPrintHtmlPrintStrategy implements VariableDebugPrintStrategy
 
                     if ($lineCount >= $maxLine) {
                         $remaining = $count - $i;
-                        $output .= $indent . '  <span style="color:#808080;">... (and ' . $remaining . ' hidden due to line limit)</span><br>';
+                        $output .= $indent . '  ' . $this->c($theme, $theme->comment, "... (and {$remaining} hidden due to line limit)") . '<br>';
                         break;
                     }
 
@@ -96,21 +104,21 @@ class VariableDebugPrintHtmlPrintStrategy implements VariableDebugPrintStrategy
                     $output .= $newIndent;
 
                     if (is_string($key)) {
-                        $output .= '<span style="color:#ce9178;">"' . htmlspecialchars($key) . '"</span>';
+                        $output .= $this->c($theme, $theme->string, '"' . htmlspecialchars($key) . '"');
                     } else {
-                        $output .= '<span style="color:#b5cea8;">' . $key . '</span>';
+                        $output .= $this->c($theme, $theme->number, (string)$key);
                     }
 
                     $nextPath = $this->getNextPath($propertyPath, (string)$key);
                     if ($this->shouldShowValue($showKeyOnly, $ignoredShowKeyPaths, $nextPath)) {
-                        $output .= ' <span style="color:#d4d4d4;">=></span> ';
+                        $output .= ' ' . $this->c($theme, $theme->punctuation, '=>') . ' ';
                         $output .= $this->formatVariable($config, $value, $depth + 1, $newIndent, $lineCount, $nextPath);
                     } else {
-                        $output .= ' <span style="color:#d4d4d4;">=></span> <span style="color:#808080;">[hidden]</span>';
+                        $output .= ' ' . $this->c($theme, $theme->punctuation, '=>') . ' ' . $this->c($theme, $theme->comment, '[hidden]');
                     }
 
                     if ($i < $count - 1) {
-                        $output .= '<span style="color:#d4d4d4;">,</span>';
+                        $output .= $this->c($theme, $theme->punctuation, ',');
                     }
                     $output .= '<br>';
                     $lineCount++;
@@ -119,14 +127,14 @@ class VariableDebugPrintHtmlPrintStrategy implements VariableDebugPrintStrategy
                     if ($showFirstArrayElement) {
                         if ($count > 1) {
                             $othersCount = $count - $i;
-                            $output .= $newIndent . "<span style='color:#808080;'>... (and {$othersCount} others)</span><br>";
+                            $output .= $newIndent . $this->c($theme, $theme->comment, "... (and {$othersCount} others)") . '<br>';
                             $lineCount++;
                         }
                         break;
                     }
                 }
                 if ($config->resolveShowExcludedCount() && $excludedCount > 0) {
-                    $output .= $newIndent . "<span style='color:#808080;'># [{$excludedCount} excluded]</span><br>";
+                    $output .= $newIndent . $this->c($theme, $theme->comment, "# [{$excludedCount} excluded]") . '<br>';
                     $lineCount++;
                 }
                 $output .= $indent . ']';
@@ -136,9 +144,9 @@ class VariableDebugPrintHtmlPrintStrategy implements VariableDebugPrintStrategy
             $className = $reflection->getName();
 
             if ($config->getShowValueType()) {
-                $output .= '<span style="color:#4ec9b0;">object</span>(<span style="color:#c586c0;">' . htmlspecialchars($className) . '</span>) {<br>';
+                $output .= $this->c($theme, $theme->type, 'object') . '(' . $this->c($theme, $theme->className, htmlspecialchars($className)) . ') {<br>';
             } else {
-                $output .= '<span style="color:#c586c0;">' . htmlspecialchars($className) . '</span> {<br>';
+                $output .= $this->c($theme, $theme->className, htmlspecialchars($className)) . ' {<br>';
             }
             $lineCount++;
 
@@ -152,11 +160,11 @@ class VariableDebugPrintHtmlPrintStrategy implements VariableDebugPrintStrategy
                     // Render custom properties
                     foreach ($customProperties as $propName => $propValue) {
                         if ($lineCount >= $maxLine) {
-                            $output .= $indent . '  <span style="color:#808080;">... (truncated)</span><br>';
+                            $output .= $indent . '  ' . $this->c($theme, $theme->comment, '... (truncated)') . '<br>';
                             return $output . $indent . '}';
                         }
                         
-                        $output .= $indent . '  <span style="color:#9cdcfe;">' . htmlspecialchars($propName) . '</span>: ';
+                        $output .= $indent . '  ' . $this->c($theme, $theme->key, htmlspecialchars($propName)) . ': ';
                         $output .= $this->formatVariable(
                             $config, $propValue, $depth + 1, $indent . '  ', $lineCount, $this->getNextPath($propertyPath, $propName)
                         ) . '<br>';
@@ -220,7 +228,7 @@ class VariableDebugPrintHtmlPrintStrategy implements VariableDebugPrintStrategy
                     $hasAnyProperty = true;
 
                     if ($lineCount >= $maxLine) {
-                        $output .= $indent . '  <span style="color:#808080;">... (truncated)</span><br>';
+                        $output .= $indent . '  ' . $this->c($theme, $theme->comment, '... (truncated)') . '<br>';
                         return $output . $indent . '}';
                     }
 
@@ -230,16 +238,16 @@ class VariableDebugPrintHtmlPrintStrategy implements VariableDebugPrintStrategy
 
                     if ($config->getShowDetailAccessModifiers()) {
                         $visibility = $prop->isPrivate() ? 'private' : ($prop->isProtected() ? 'protected' : 'public');
-                        $output .= $indent . '  <span style="color:#c586c0;">' . $visibility . '</span> ';
-                        $output .= '<span style="color:#9cdcfe;">' . $prop->getName() . '</span>';
+                        $output .= $indent . '  ' . $this->c($theme, $theme->visibility, $visibility) . ' ';
+                        $output .= $this->c($theme, $theme->key, $prop->getName());
                         
                         if ($this->shouldShowValue($showKeyOnly, $ignoredShowKeyPaths, $nextPath)) {
                             $output .= ': ';
                         }
                     } else {
                         $visibility = $prop->isPrivate() ? '-' : ($prop->isProtected() ? '#' : '+');
-                        $output .= $indent . '  <span style="color:#c586c0;">' . $visibility . '</span>';
-                        $output .= '<span style="color:#9cdcfe;">' . $prop->getName() . '</span>';
+                        $output .= $indent . '  ' . $this->c($theme, $theme->visibility, $visibility);
+                        $output .= $this->c($theme, $theme->key, $prop->getName());
                         
                         if ($this->shouldShowValue($showKeyOnly, $ignoredShowKeyPaths, $nextPath)) {
                             $output .= ': ';
@@ -252,7 +260,7 @@ class VariableDebugPrintHtmlPrintStrategy implements VariableDebugPrintStrategy
                     } else {
                         try {
                             if (!$prop->isInitialized($var)) {
-                                $output .= '<span style="color:#808080;">[uninitialized]</span>';
+                                $output .= $this->c($theme, $theme->comment, '[uninitialized]');
                             } else {
                                 $propValue = $prop->getValue($var);
                                 
@@ -262,14 +270,14 @@ class VariableDebugPrintHtmlPrintStrategy implements VariableDebugPrintStrategy
                                 
                                 if ($showValueMode->isShowTypeOnly()) {
                                     // Chỉ show type
-                                    $output .= $this->formatTypeOnly($propValue);
+                                    $output .= $this->formatTypeOnly($config, $propValue);
                                 } else {
                                     // Show full detail
                                     $output .= $this->formatVariable($config, $propValue, $depth + 1, $indent . '  ', $lineCount, $nextPath);
                                 }
                             }
                         } catch (\Exception $e) {
-                            $output .= '<span style="color:#ff6b6b;">Error: ' . htmlspecialchars($e->getMessage()) . '</span>';
+                            $output .= $this->c($theme, $theme->error, 'Error: ' . htmlspecialchars($e->getMessage()));
                         }
 
                         $output .= '<br>';
@@ -302,22 +310,22 @@ class VariableDebugPrintHtmlPrintStrategy implements VariableDebugPrintStrategy
                 $hasAnyProperty = true;
 
                 if ($lineCount >= $maxLine) {
-                    $output .= $indent . '  <span style="color:#808080;">... (truncated)</span><br>';
+                    $output .= $indent . '  ' . $this->c($theme, $theme->comment, '... (truncated)') . '<br>';
                     return $output . $indent . '}';
                 }
 
                 $nextPath = $this->getNextPath($propertyPath, $propName);
 
                 if ($config->getShowDetailAccessModifiers()) {
-                    $output .= $indent . '  <span style="color:#c586c0;">public</span> ';
-                    $output .= '<span style="color:#9cdcfe;">"' . htmlspecialchars($propName) . '"</span>';
+                    $output .= $indent . '  ' . $this->c($theme, $theme->visibility, 'public') . ' ';
+                    $output .= $this->c($theme, $theme->key, '"' . htmlspecialchars($propName) . '"');
                     
                     if ($this->shouldShowValue($showKeyOnly, $ignoredShowKeyPaths, $nextPath)) {
                         $output .= ': ';
                     }
                 } else {
-                    $output .= $indent . '  <span style="color:#c586c0;">+</span>';
-                    $output .= '<span style="color:#9cdcfe;">"' . htmlspecialchars($propName) . '"</span>';
+                    $output .= $indent . '  ' . $this->c($theme, $theme->visibility, '+');
+                    $output .= $this->c($theme, $theme->key, '"' . htmlspecialchars($propName) . '"');
                     
                     if ($this->shouldShowValue($showKeyOnly, $ignoredShowKeyPaths, $nextPath)) {
                         $output .= ': ';
@@ -333,7 +341,7 @@ class VariableDebugPrintHtmlPrintStrategy implements VariableDebugPrintStrategy
                     
                     if ($showValueMode->isShowTypeOnly()) {
                         // Chỉ show type
-                        $output .= $this->formatTypeOnly($propValue);
+                        $output .= $this->formatTypeOnly($config, $propValue);
                     } else {
                         // Show full detail
                         $output .= $this->formatVariable($config, $propValue, $depth + 1, $indent . '  ', $lineCount, $nextPath);
@@ -346,13 +354,13 @@ class VariableDebugPrintHtmlPrintStrategy implements VariableDebugPrintStrategy
 
             if (!$hasAnyProperty) {
                 if ($hasConflict) {
-                    $output .= $indent . '  <span style="color:#808080;">[Empty] # excluded properties contain all included properties</span><br>';
+                    $output .= $indent . '  ' . $this->c($theme, $theme->comment, '[Empty] # excluded properties contain all included properties') . '<br>';
                 } else {
-                    $output .= $indent . '  <span style="color:#808080;"># No properties</span><br>';
+                    $output .= $indent . '  ' . $this->c($theme, $theme->comment, '# No properties') . '<br>';
                 }
                 $lineCount++;
             } elseif ($config->resolveShowExcludedCount() && $excludedCount > 0) {
-                $output .= $indent . '  <span style="color:#808080;"># [' . $excludedCount . ' excluded]</span><br>';
+                $output .= $indent . '  ' . $this->c($theme, $theme->comment, "# [{$excludedCount} excluded]") . '<br>';
                 $lineCount++;
             }
 
@@ -360,29 +368,29 @@ class VariableDebugPrintHtmlPrintStrategy implements VariableDebugPrintStrategy
         } elseif (is_string($var)) {
             $len = strlen($var);
             if ($config->getShowValueType()) {
-                $output .= '<span style="color:#4ec9b0;">string</span>(<span style="color:#b5cea8;">' . $len . '</span>) ';
+                $output .= $this->c($theme, $theme->type, 'string') . '(' . $this->c($theme, $theme->number, (string)$len) . ') ';
             }
-            $output .= '<span style="color:#ce9178;">"' . htmlspecialchars($var) . '"</span>';
+            $output .= $this->c($theme, $theme->string, '"' . htmlspecialchars($var) . '"');
         } elseif (is_int($var)) {
             if ($config->getShowValueType()) {
-                $output .= '<span style="color:#4ec9b0;">int</span>(<span style="color:#b5cea8;">' . $var . '</span>)';
+                $output .= $this->c($theme, $theme->type, 'int') . '(' . $this->c($theme, $theme->number, (string)$var) . ')';
             } else {
-                $output .= '<span style="color:#b5cea8;">' . $var . '</span>';
+                $output .= $this->c($theme, $theme->number, (string)$var);
             }
         } elseif (is_float($var)) {
             if ($config->getShowValueType()) {
-                $output .= '<span style="color:#4ec9b0;">float</span>(<span style="color:#b5cea8;">' . $var . '</span>)';
+                $output .= $this->c($theme, $theme->type, 'float') . '(' . $this->c($theme, $theme->number, (string)$var) . ')';
             } else {
-                $output .= '<span style="color:#b5cea8;">' . $var . '</span>';
+                $output .= $this->c($theme, $theme->number, (string)$var);
             }
         } elseif (is_bool($var)) {
             if ($config->getShowValueType()) {
-                $output .= '<span style="color:#4ec9b0;">bool</span>(<span style="color:#569cd6;">' . ($var ? 'true' : 'false') . '</span>)';
+                $output .= $this->c($theme, $theme->type, 'bool') . '(' . $this->c($theme, $theme->boolNull, $var ? 'true' : 'false') . ')';
             } else {
-                $output .= '<span style="color:#569cd6;">' . ($var ? 'true' : 'false') . '</span>';
+                $output .= $this->c($theme, $theme->boolNull, $var ? 'true' : 'false');
             }
         } elseif (is_null($var)) {
-            $output .= '<span style="color:#569cd6;">null</span>';
+            $output .= $this->c($theme, $theme->boolNull, 'null');
         } else {
             if ($config->getShowValueType()) {
                 $output .= '<span style="color:#4ec9b0;">' . gettype($var) . '</span> ';
@@ -403,6 +411,11 @@ class VariableDebugPrintHtmlPrintStrategy implements VariableDebugPrintStrategy
         }
 
         return ltrim($filePath, '/');
+    }
+
+    private function c(VariableDebugWebColorTheme $theme, string $color, string $text): string
+    {
+        return $color ? "<span style=\"color:{$color};\">{$text}</span>" : $text;
     }
 
     private function filterParentPaths(array $paths): array
@@ -714,39 +727,41 @@ class VariableDebugPrintHtmlPrintStrategy implements VariableDebugPrintStrategy
         return $mode;
     }
     
-    private function formatTypeOnly(mixed $value): string
+    private function formatTypeOnly(VariableDebugConfig $config, mixed $value): string
     {
+        $theme = $config->resolveWebThemeOrDefault();
+        
         if (is_object($value)) {
             $className = htmlspecialchars(get_class($value));
-            return '<span style="color:#4ec9b0;">object</span>(<span style="color:#c586c0;">' . $className . '</span>)';
+            return $this->c($theme, $theme->type, 'object') . '(' . $this->c($theme, $theme->className, $className) . ')';
         }
         
         if (is_array($value)) {
             $count = count($value);
-            return '<span style="color:#4ec9b0;">array</span>(<span style="color:#b5cea8;">' . $count . '</span>)';
+            return $this->c($theme, $theme->type, 'array') . '(' . $this->c($theme, $theme->number, (string)$count) . ')';
         }
         
         if (is_string($value)) {
             $len = strlen($value);
-            return '<span style="color:#4ec9b0;">string</span>(<span style="color:#b5cea8;">' . $len . '</span>)';
+            return $this->c($theme, $theme->type, 'string') . '(' . $this->c($theme, $theme->number, (string)$len) . ')';
         }
         
         if (is_int($value)) {
-            return '<span style="color:#4ec9b0;">int</span>';
+            return $this->c($theme, $theme->type, 'int');
         }
         
         if (is_float($value)) {
-            return '<span style="color:#4ec9b0;">float</span>';
+            return $this->c($theme, $theme->type, 'float');
         }
         
         if (is_bool($value)) {
-            return '<span style="color:#4ec9b0;">bool</span>';
+            return $this->c($theme, $theme->type, 'bool');
         }
         
         if (is_null($value)) {
-            return '<span style="color:#569cd6;">null</span>';
+            return $this->c($theme, $theme->boolNull, 'null');
         }
         
-        return '<span style="color:#4ec9b0;">' . htmlspecialchars(gettype($value)) . '</span>';
+        return $this->c($theme, $theme->type, htmlspecialchars(gettype($value)));
     }
 }

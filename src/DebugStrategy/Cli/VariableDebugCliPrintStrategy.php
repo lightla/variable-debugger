@@ -5,7 +5,7 @@ namespace lightla\VariableDebugger\DebugStrategy\Cli;
 use lightla\VariableDebugger\VariableDebugConfig;
 use lightla\VariableDebugger\VariableDebugPrintStrategy;
 
-class VariableDebugPrintCliPrintStrategy implements VariableDebugPrintStrategy
+class VariableDebugCliPrintStrategy implements VariableDebugPrintStrategy
 {
     public function printFromTrace(
         VariableDebugConfig $config,

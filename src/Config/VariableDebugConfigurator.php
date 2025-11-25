@@ -6,7 +6,8 @@ use lightla\VariableDebugger\Adapters\Laravel\VariableDebugClassPropertyPluginAd
 use lightla\VariableDebugger\Adapters\PDO\VariableDebugClassPropertyPluginAdapterPDO;
 use lightla\VariableDebugger\Adapters\VariableDebugClassPropertyPluginAdapter;
 use lightla\VariableDebugger\DebugStrategy\Cli\VariableDebugCliColorTheme;
-use lightla\VariableDebugger\DebugStrategy\Cli\VariableDebugPrintCliPrintStrategy;
+use lightla\VariableDebugger\DebugStrategy\Cli\VariableDebugCliPrintStrategy;
+use lightla\VariableDebugger\DebugStrategy\Html\VariableDebugWebColorTheme;
 
 class VariableDebugConfigurator
 {
@@ -17,6 +18,7 @@ class VariableDebugConfigurator
     protected ?bool $showValueType = null;
     protected ?bool $showDetailAccessModifiers = null;
     protected ?VariableDebugCliColorTheme $cliTheme = null;
+    protected ?VariableDebugWebColorTheme $webTheme = null;
     protected ?bool $showKeyOnly = null;
     protected ?array $ignoredShowKeyProperties = null;
     protected ?array $includedProperties = null;
@@ -211,6 +213,13 @@ class VariableDebugConfigurator
         return $this;
     }
 
+    public function useWebTheme(VariableDebugWebColorTheme $theme): self
+    {
+        $this->webTheme = $theme;
+
+        return $this;
+    }
+
     public function useCliThemeDark(): self
     {
         return $this->useCliTheme(VariableDebugCliColorTheme::dark());
@@ -228,7 +237,16 @@ class VariableDebugConfigurator
 
     public function useWebThemeDark(): self
     {
-        # Comming soon ^^ (always dark)
-        return $this;
+        return $this->useCliTheme(VariableDebugCliColorTheme::dark());
+    }
+
+    public function useWebThemeLight(): self
+    {
+        return $this->useWebTheme(VariableDebugWebColorTheme::light());
+    }
+
+    public function useWebThemeNoColor(): self
+    {
+        return $this->useWebTheme(VariableDebugWebColorTheme::noColor());
     }
 }
