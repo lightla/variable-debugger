@@ -10,14 +10,14 @@ class VariablePendingDebug
     private ?VariableDebugConfig $variableDebugConfig = null;
 
     public function __construct(
-        private array $backtrace,
-        private VariableDebugger $variableDebugger,
-        private readonly \Closure $pendingDebugAction,
-        private ?VariableDebugConfigBuilder $variableDebugConfigBuilder = null,
+        private array                       $backtrace,
+        private VariableDebugger            $variableDebugger,
+        private readonly \Closure           $pendingDebugAction,
+        private ?VariableDebugConfigBuilder $configBuilder = null,
     )
     {
-        if (! $this->variableDebugConfigBuilder) {
-            $this->variableDebugConfigBuilder = VariableDebugConfig::builder();
+        if (! $this->configBuilder) {
+            $this->configBuilder = VariableDebugConfig::builder();
         }
     }
 
@@ -25,7 +25,7 @@ class VariablePendingDebug
     {
         $this->variableDebugger->setConfig(
         $this->variableDebugConfig ?:
-            $this->variableDebugConfigBuilder->build()
+            $this->configBuilder->build()
                 ->merge(VariableDebugConfig::getGlobalConfig())
         );
 
@@ -39,79 +39,86 @@ class VariablePendingDebug
 
     public function presetCompact(?int $maxDepth = null, ?bool $showArrayOnlyFirstElement = null): static
     {
-        $this->variableDebugConfigBuilder->presetCompact($maxDepth, $showArrayOnlyFirstElement);
+        $this->configBuilder->presetCompact($maxDepth, $showArrayOnlyFirstElement);
 
         return $this;
     }
 
     public function presetDetailed(?int $maxDepth = null, bool $showArrayOnlyFirstElement = false): static
     {
-        $this->variableDebugConfigBuilder->presetDetailed($maxDepth, $showArrayOnlyFirstElement);
+        $this->configBuilder->presetDetailed($maxDepth, $showArrayOnlyFirstElement);
 
         return $this;
     }
 
-    public function showKeyOnly(?bool $showKeyOnly, ?array $ignoredShowKeyProperties = null): static
+    public function showKeyOnly(array $ignoredShowKeyProperties = [], bool $showKeyOnly = true): static
     {
-        $this->variableDebugConfigBuilder
+        $this->configBuilder
             ->withShowKeyOnly($showKeyOnly)
             ->withIgnoredShowKeyProperties($ignoredShowKeyProperties);
 
         return $this;
     }
 
+    public function showExcludedCount(bool $showExcludedCount = true): static
+    {
+        $this->configBuilder->withShowExcludedCount($showExcludedCount);
+
+        return $this;
+    }
+
     public function withProperties(array $properties): static
     {
-        $this->variableDebugConfigBuilder->withProperties($properties);
+        $this->configBuilder->withProperties($properties);
 
         return $this;
     }
 
     public function withoutProperties(array $properties): static
     {
-        $this->variableDebugConfigBuilder->withoutProperties($properties);
+        $this->configBuilder->withoutProperties($properties);
 
         return $this;
     }
 
     public function classProperties(string $className, array $properties): static
     {
-        $this->variableDebugConfigBuilder->addClassProperties($className, $properties);
+        $this->configBuilder->addClassProperties($className, $properties);
 
         return $this;
     }
 
     public function addClassPropertiesFromPlugin(VariableDebugClassPropertyPluginAdapter $plugin): static
     {
-        $this->variableDebugConfigBuilder->addClassPropertiesFromPlugin($plugin);
+        $this->configBuilder->addClassPropertiesFromPlugin($plugin);
 
         return $this;
     }
 
     public function addClassPropertiesFromPluginLaravel(): static
     {
-        $this->variableDebugConfigBuilder->addClassPropertiesFromPluginLaravel();
+        $this->configBuilder->addClassPropertiesFromPluginLaravel();
 
         return $this;
     }
 
     public function maxDepth(int $maxDepth): static
     {
-        $this->variableDebugConfigBuilder->withMaxDepth($maxDepth);
+        $this->configBuilder->withMaxDepth($maxDepth);
 
         return $this;
     }
 
     public function maxLine(int $maxLine): static
     {
-        $this->variableDebugConfigBuilder->withMaxLine($maxLine);
+        $this->configBuilder->withMaxLine($maxLine);
 
         return $this;
     }
 
     public function showValueType(bool $showValueType): static
     {
-        $this->variableDebugConfigBuilder->withShowValueType($showValueType);
+        $this->configBuilder->withShowValueType($showValueType);
 
         return $this;
     }

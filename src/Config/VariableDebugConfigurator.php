@@ -19,6 +19,7 @@ class VariableDebugConfigurator
     protected ?array $ignoredShowKeyProperties = null;
     protected ?array $includedProperties = null;
     protected ?array $excludedProperties = null;
+    protected ?bool $showExcludedCount = null;
     protected ?array $includedClassProperties = null;
 
     /**
@@ -37,7 +38,8 @@ class VariableDebugConfigurator
                 )
             )
             ->withShowDetailAccessModifiers(false)
-            ->withShowValueType(false);
+            ->withShowValueType(false)
+            ->withShowExcludedCount(false);
 
         return $this;
     }
@@ -53,7 +55,8 @@ class VariableDebugConfigurator
                 )
             )
             ->withShowDetailAccessModifiers(true)
-            ->withShowValueType(true);
+            ->withShowValueType(true)
+            ->withShowExcludedCount(true);
 
         return $this;
     }
@@ -103,6 +106,13 @@ class VariableDebugConfigurator
     public function withShowKeyOnly(?bool $showKeyOnly): self
     {
         $this->showKeyOnly = $showKeyOnly;
+
+        return $this;
+    }
+
+    public function withShowExcludedCount(?bool $showExcludedCount): self
+    {
+        $this->showExcludedCount = $showExcludedCount;
 
         return $this;
     }

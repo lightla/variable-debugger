@@ -14,6 +14,7 @@ class VariableDebugConfig
     private const DEFAULT_SHOW_ARRAY_MODE = VariableDebugConfigArrayShowMode::SHOW_ALL_ELEMENT;
     private const DEFAULT_MAX_LINE = 200;
     private const DEFAULT_SHOW_KEY_ONLY = false;
+    private const DEFAULT_SHOW_EXCLUDED_COUNT = true;
 
     public function __construct(
         private ?string $projectRootPath = '',
@@ -27,6 +28,7 @@ class VariableDebugConfig
         private ?VariableDebugCliColorTheme $cliTheme = null,
         private ?array $includedProperties = [],
         private ?array $excludedProperties = [],
+        private ?bool $showExcludedCount = null,
         private ?array $includedClassProperties = [],
     )
     {
@@ -109,6 +111,14 @@ class VariableDebugConfig
     public function getExcludedProperties(): ?array
     {
         return $this->excludedProperties;
+    }
+
+    /**
+     * @return bool|null
+     */
+    public function getShowExcludedCount(): ?bool
+    {
+        return $this->showExcludedCount;
     }
 
     /**
@@ -208,6 +218,14 @@ class VariableDebugConfig
     }
 
     /**
+     * @return bool
+     */
+    public function resolveShowExcludedCount(): bool
+    {
+        return $this->showExcludedCount ?? self::DEFAULT_SHOW_EXCLUDED_COUNT;
+    }
+
+    /**
      * @return VariableDebugConfigArrayShowMode
      */
     public function resolveShowArrayModeOrDefault(): VariableDebugConfigArrayShowMode
@@ -233,6 +251,7 @@ class VariableDebugConfig
             $this->cliTheme ?? $config?->getCliTheme(),
             $this->includedProperties ?? $config?->getIncludedProperties(),
             $this->excludedProperties ?? $config?->getExcludedProperties(),
+            $this->showExcludedCount ?? $config?->getShowExcludedCount(),
             array_replace(
                 $config?->getIncludedClassProperties() ?? [],
                 $this->includedClassProperties ?? []

@@ -125,7 +125,7 @@ class VariableDebugPrintHtmlPrintStrategy implements VariableDebugPrintStrategy
                         break;
                     }
                 }
-                if ($excludedCount > 0) {
+                if ($config->resolveShowExcludedCount() && $excludedCount > 0) {
                     $output .= $newIndent . "<span style='color:#808080;'># [{$excludedCount} excluded]</span><br>";
                     $lineCount++;
                 }
@@ -303,7 +303,7 @@ class VariableDebugPrintHtmlPrintStrategy implements VariableDebugPrintStrategy
                     $output .= $indent . '  <span style="color:#808080;"># No properties</span><br>';
                 }
                 $lineCount++;
-            } elseif ($excludedCount > 0) {
+            } elseif ($config->resolveShowExcludedCount() && $excludedCount > 0) {
                 $output .= $indent . '  <span style="color:#808080;"># [' . $excludedCount . ' excluded]</span><br>';
                 $lineCount++;
             }

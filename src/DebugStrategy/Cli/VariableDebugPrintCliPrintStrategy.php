@@ -231,7 +231,7 @@ class VariableDebugPrintCliPrintStrategy implements VariableDebugPrintStrategy
             }
         }
 
-        if ($excludedCount > 0) {
+        if ($config->resolveShowExcludedCount() && $excludedCount > 0) {
             $output .= $newIndent . $colorTheme->comment . "[{$excludedCount} excluded]" . PHP_EOL;
             $lineCount++;
         }
@@ -439,7 +439,7 @@ class VariableDebugPrintCliPrintStrategy implements VariableDebugPrintStrategy
                 $output .= $indent . "  " . $colorTheme->comment . "# [No properties]" . PHP_EOL;
             }
             $lineCount++;
-        } elseif ($excludedCount > 0) {
+        } elseif ($config->resolveShowExcludedCount() && $excludedCount > 0) {
             $output .= $indent . "  " . $colorTheme->comment . "[{$excludedCount} excluded]" . PHP_EOL;
             $lineCount++;
         }

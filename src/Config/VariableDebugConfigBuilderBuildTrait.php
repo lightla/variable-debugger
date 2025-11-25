@@ -20,6 +20,7 @@ trait VariableDebugConfigBuilderBuildTrait
             $this->cliTheme,
             $this->includedProperties,
             $this->excludedProperties,
+            $this->showExcludedCount,
             $this->includedClassProperties,
         );
     }
