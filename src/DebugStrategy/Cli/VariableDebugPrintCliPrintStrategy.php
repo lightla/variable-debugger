@@ -197,6 +197,8 @@ class VariableDebugPrintCliPrintStrategy implements VariableDebugPrintStrategy
                 $output .= $this->formatVariable(
                     $config, $colorTheme, $value, $depth + 1, $newIndent, $lineCount, $nextPath
                 );
+            } else {
+                $output .= $colorTheme->punctuation . " => " . $colorTheme->comment . "[hidden]";
             }
 
             if ($i < $count - 1) {

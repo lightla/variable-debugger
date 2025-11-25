@@ -93,6 +93,8 @@ class VariableDebugPrintHtmlPrintStrategy implements VariableDebugPrintStrategy
                     if ($this->shouldShowValue($showKeyOnly, $ignoredShowKeyPaths, $nextPath)) {
                         $output .= ' <span style="color:#d4d4d4;">=></span> ';
                         $output .= $this->formatVariable($config, $value, $depth + 1, $newIndent, $lineCount, $nextPath);
+                    } else {
+                        $output .= ' <span style="color:#d4d4d4;">=></span> <span style="color:#808080;">[hidden]</span>';
                     }
 
                     if ($i < $count - 1) {
