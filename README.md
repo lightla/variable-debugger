@@ -24,7 +24,7 @@ $u = \App\Models\User::factory()->create();
 v_dump($u, ['x' => ['tmp1' => 1, 'tmp2' => 2]])->withProperties(['x.tmp1']);
 
 v_dd($u, ['x' => 1, (object)['y' => 1]])
-    ->showKeyOnly(true, ['connection', 'attributes.name'])
+    ->showKeyOnly(['connection', 'attributes.name'], true)
     ->withProperties(['fillable', 'hidden', 'connection', 'attributes'])
     ->withoutProperties(['hidden'])
     ->addClassPropertiesFromPluginLaravel()
