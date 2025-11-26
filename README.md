@@ -1,3 +1,24 @@
+### FEATURE ###
+Web Light/Dark/NoColor pretty Theme:
++ Tips: Open/hide array/object by toggle click at: `[<<<, [...], {<<<, {...}` 
+<div style="width: 100%;flex-direction: row; gap:0px;">
+    <img src="docs/web-dark-theme.png" alt="" width="45%" />
+    <img src="docs/web-light-theme.png" alt="" width="45%"/>
+</div>
+
+Cli Light/Dark/NoColor pretty Theme
+<div style="width: 100%;flex-direction: row; gap:0px;">
+    <img src="docs/cli-dark-theme.png" alt="" width="45%" />
+    <img src="docs/cli-light-theme.png" alt="" width="45%"/>
+</div>
+
+####  And More... #### 
+- Max lines shown
+- Max depth shown
+- Custom display properties
+- Class properties
+- Build class properties later (callback)
+- Load class properties from plugins
 
 ### FOR YOU ###
 
