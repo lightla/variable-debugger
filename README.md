@@ -21,20 +21,22 @@ $config = \lightla\VariableDebugger\VariableDebugConfig::builder()
     ->presetDetailed(15, false) # shortcut config for detailed mode 
     ->useWebThemeDark()         # Default web: Dark
     ->useCliThemeNoColor()      # Default cli: NoColor
-    # ->withProperties() # WARNING - NOT USE for global config
-    ->addClassProperties(\App\Models\User::class, ['attributes'])
+    # Show only properties, empty => show ALL (Called: includedProperties)
+    ->withProperties(['key1', '0.key1.key2'])   # + WARNING - NOT USE for global config
+    # Ignore show properties, empty => skipped (Called: excludedProperties)
+    ->withoutProperties(['key1', '0.key1.key2']) # WARNING - NOT USE for global config
+    ->addClassProperties(\App\Models\User::class, ['attributes']) # (Called: classIncludedProperties
+    ->withShowExcludedCount(true) # # Show Excluded Count or not, Default: true
     # Build Later (Because PDO is a Native Extension, cannot Reflection
     ->addBuildLaterClassProperties(PDO::class, function (PDO $pdo) {
         return ['inTransaction' => $pdo->inTransaction()];
     }) 
-    ->addClassPropertiesFromPlugin( 
-        # You can add custom your plugin
+    # Add custom plugin
+    ->addClassPropertiesFromPlugin(
         new VariableDebugClassPropertyPluginAdapterLaravel()
     ) 
     ->addClassPropertiesFromPluginLaravel() # Plugin snippet for Laravel (if use Laravel)
     ->addClassPropertiesFromPluginPDO() # Plugin snippet for PDO
-    ->withShowExcludedCount(true) # Show Excluded Count or not
-                                  # + Excluded Count show from withProperties(), addClassProperties()
     ->withShowKeyOnly(true) # WARNING - NOT USE for global config
     ->withIgnoredShowKeyProperties(['field1.key1', 'field2']) # have effected if showKeyOnly enabled
     ->build()
