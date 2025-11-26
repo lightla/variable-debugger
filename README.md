@@ -39,25 +39,49 @@ v_dd($u, ['x' => 1, (object)['y' => 1]])
 
 ### FOR ME ####
 
-```aiignore
-## Cách 1: Git exclude local
-• File .git/info/exclude giống như .gitignore nhưng chỉ tồn tại trên máy bạn
-• Không được commit lên GitHub
-• Chỉ bạn thấy, người khác clone về không có
+```text
+----------------
+# Test App (use for test library)
+##  composer.json
+"require": {
+    "php": "^8.2",
+    "lightla/variable-debugger": "*@dev" 
+}
+"repositories":[
+    {
+        "type": "path",
+        "url": "/var/www/this-library" # Docker mount host
+    }
+],
 
-## Cách 2: Git assume-unchanged
+## Docker mount host for test app
+- ../../composer.json:/var/www/this-library/composer.json:ro
+- ../../src:/var/www/this-library/src:ro
+- ../../tests:/var/www/this-library/tests:ro
+
+----------------
+# GIT Knowledge
+## Case 1: Git exclude local
+• File .git/info/exclude like .gitignore but existing only on my local 
+• No have any change or commit on GitHub
+
+## Case 2: Git assume-unchanged
 • Báo cho Git "làm như file này không thay đổi"
 • Dù bạn sửa file, Git vẫn ignore
 • Dùng khi muốn giữ file nhưng không track changes
 
-./vendor/bin/pest this-library/tests
-./vendor/bin/phpunit this-library/tests --testdox
-./vendor/bin/pest this-library/tests --testdox
+## GIT SHOW REMOTE TAG
+git ls-remote --tags origin
 
-
-## GIT DELETE TAG
+## GIT DELETE TAG VIA Pattern
 git tag \
 | grep "^v1\.0\." \
 | grep -Ev "v1\.0\.16|v1\.0\.17" \
 | xargs -r git tag -d
+
+----------------
+# Test
+./vendor/bin/pest this-library/tests
+./vendor/bin/phpunit this-library/tests --testdox
+./vendor/bin/pest this-library/tests --testdox
 ```
