@@ -134,13 +134,23 @@ class VariableDebugConfigurator
         $normalized = [];
         
         foreach ($properties as $property => $value) {
+            if (is_bool($value)) {
+                $normalized[$property] = $value
+                    ? VariableDebugClassPropertyShowValueMode::SHOW_DETAIL
+                    : VariableDebugClassPropertyShowValueMode::SHOW_TYPE_ONLY;
+
+                continue;
+            }
+
             if ($value instanceof VariableDebugClassPropertyShowValueMode) {
                 $normalized[$property] = $value;
+
                 continue;
             }
 
             if (is_int($property)) {
                 $normalized[$value] = VariableDebugClassPropertyShowValueMode::SHOW_DETAIL;
+
                 continue;
             }
 
@@ -164,13 +174,23 @@ class VariableDebugConfigurator
         $normalized = [];
 
         foreach ($properties as $property => $value) {
+            if (is_bool($value)) {
+                $normalized[$property] = $value
+                    ? VariableDebugClassPropertyShowValueMode::SHOW_DETAIL
+                    : VariableDebugClassPropertyShowValueMode::SHOW_TYPE_ONLY;
+
+                continue;
+            }
+
             if ($value instanceof VariableDebugClassPropertyShowValueMode) {
                 $normalized[$property] = $value;
+
                 continue;
             }
 
                 if (is_int($property)) {
                     $normalized[$value] = VariableDebugClassPropertyShowValueMode::SHOW_DETAIL;
+
                     continue;
                 }
 

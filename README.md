@@ -44,7 +44,12 @@ $config = \lightla\VariableDebugger\VariableDebugConfig::builder()
     ->useWebThemeDark()         # Default web: Dark
     ->useCliThemeNoColor()      # Default cli: NoColor
     # Show only properties, empty => show ALL (Called: includedProperties)
-    ->withProperties(['key1', '0.key1.key2'])   # + WARNING - NOT USE for global config
+    ->withProperties([
+        'key0', # default: VariableDebugClassPropertyShowValueMode::SHOW_DETAIL
+        'key1' => VariableDebugClassPropertyShowValueMode::SHOW_TYPE_ONLY, 
+        '0.key1.key2' => true, # same: VariableDebugClassPropertyShowValueMode::SHOW_DETAIL
+        '0.key1.key2' => false, # same: VariableDebugClassPropertyShowValueMode::SHOW_TYPE_ONLY
+    ])   # + WARNING - NOT USE for global config
     # Ignore show properties, empty => skipped (Called: excludedProperties)
     ->withoutProperties(['key1', '0.key1.key2']) # WARNING - NOT USE for global config
     ->addClassProperties(\App\Models\User::class, ['attributes']) # (Called: classIncludedProperties

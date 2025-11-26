@@ -2,8 +2,6 @@
 
 namespace lightla\VariableDebugger\Config;
 
-use phpDocumentor\Reflection\Types\Static_;
-
 enum VariableDebugClassPropertyShowValueMode: string
 {
     case SHOW_DETAIL = 'SHOW_DETAIL';
