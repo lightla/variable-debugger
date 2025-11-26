@@ -52,7 +52,7 @@ $config = \lightla\VariableDebugger\VariableDebugConfig::builder()
     ])   # + WARNING - NOT USE for global config
     # Ignore show properties, empty => skipped (Called: excludedProperties)
     ->withoutProperties(['key1', '0.key1.key2']) # WARNING - NOT USE for global config
-    ->addClassProperties(\App\Models\User::class, ['attributes']) # (Called: classIncludedProperties
+    ->addClassProperties(\App\Models\User::class, ['attributes']) # Called: classIncludedProperties
     ->withShowExcludedCount(true) # # Show Excluded Count or not, Default: true
     # Build Later (Because PDO is a Native Extension, cannot Reflection
     ->addBuildLaterClassProperties(PDO::class, function (PDO $pdo) {
