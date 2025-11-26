@@ -59,15 +59,25 @@ v_dd($u, ['x' => 1, (object)['y' => 1]])
 ```text
 ----------------
 # Test App (use for test library)
-##  composer.json
+## composer.json: 
+## + By default, composer scan from https://packagist.org, if not found, composer scan from repositories
 "require": {
     "php": "^8.2",
     "lightla/variable-debugger": "*@dev" 
 }
-"repositories":[
+"repositories":[ 
+    # Setting for local repo
     {
-        "type": "path",
+        "type": "path", 
         "url": "/var/www/this-library" # Docker mount host
+    },
+    # Setting for private repo
+    {
+        "type": "vcs",
+        "url": "git@github.com-lightla:lightla/variable-debugger.git",
+        "options": {
+            "no-api": true
+        }
     }
 ],
 
