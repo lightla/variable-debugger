@@ -11,8 +11,9 @@ v_gl_config()
     ->withProjectRootPath(base_path()) # recommended
     ->withMaxDepth(VariableDebugConfig::DEFAULT_MAX_DEPTH) # recommended
     ->withMaxLine(VariableDebugConfig::DEFAULT_MAX_LINE) # recommended
-    >addClassPropertiesFromPluginLaravel() # recommended
-    >addClassPropertiesFromPluginPDO() # recommended
+    ->addClassPropertiesFromPluginLaravel() # recommended
+    ->addClassPropertiesFromPluginPDO() # recommended
+    ->withShowExcludedCount(true) # recommended
     
 # Config
 $config = \lightla\VariableDebugger\VariableDebugConfig::builder()
@@ -32,22 +33,24 @@ $config = \lightla\VariableDebugger\VariableDebugConfig::builder()
     ) 
     ->addClassPropertiesFromPluginLaravel() # Plugin snippet for Laravel (if use Laravel)
     ->addClassPropertiesFromPluginPDO() # Plugin snippet for PDO
-    # ->withShowKeyOnly(true) # WARNING - NOT USE for global config
-    # ->withIgnoredShowKeyProperties(['field1.key1', 'field2']) # have effected if showKeyOnly enabled
+    ->withShowExcludedCount(true) # Show Excluded Count or not
+                                  # + Excluded Count show from withProperties(), addClassProperties()
+    ->withShowKeyOnly(true) # WARNING - NOT USE for global config
+    ->withIgnoredShowKeyProperties(['field1.key1', 'field2']) # have effected if showKeyOnly enabled
     ->build()
 
 # Usecase
 $u = \App\Models\User::factory()->create();
 
 v_dump($u, ['x' => ['tmp1' => 1, 'tmp2' => 2]])
-    ->on($config)
+    ->on($config) # override global config
 
 v_dd($u, ['x' => 1, (object)['y' => 1]])
+    # override global config
     ->presetCompact(10)
-    ->showKeyOnly(['connection', 'attributes.name'], true)
+    ->showKeyOnly(['connection', 'attributes.name'])
     ->withProperties(['fillable', 'hidden', 'connection', 'attributes'])
     ->withoutProperties(['hidden'])
-    ->addClassPropertiesFromPluginLaravel()
 ;
 ```
 
