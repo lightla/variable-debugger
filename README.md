@@ -29,6 +29,7 @@ Cli Light/Dark/NoColor pretty Theme
 
 # Global Config
 v_gl_config()
+    ->presetCompact(20, true) # recommended
     ->withProjectRootPath(base_path()) # recommended
     ->withMaxDepth(VariableDebugConfig::DEFAULT_MAX_DEPTH) # recommended
     ->withMaxLine(VariableDebugConfig::DEFAULT_MAX_LINE) # recommended
