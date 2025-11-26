@@ -35,7 +35,7 @@ v_gl_config()
     ->withMaxLine(VariableDebugConfig::DEFAULT_MAX_LINE) # recommended
     ->addClassPropertiesFromPluginLaravel() # recommended
     ->addClassPropertiesFromPluginPDO() # recommended
-    ->withShowExcludedCount(true) # recommended
+    ->withShowExcludedCount(true); # recommended
     
 # Config
 $config = \lightla\VariableDebugger\VariableDebugConfig::builder()
@@ -61,21 +61,21 @@ $config = \lightla\VariableDebugger\VariableDebugConfig::builder()
     ->addClassPropertiesFromPluginPDO() # Plugin snippet for PDO
     ->withShowKeyOnly(true) # WARNING - NOT USE for global config
     ->withIgnoredShowKeyProperties(['field1.key1', 'field2']) # have effected if showKeyOnly enabled
-    ->build()
+    ->build();
 
 # Usecase
 $u = \App\Models\User::factory()->create();
 
 v_dump($u, ['x' => ['tmp1' => 1, 'tmp2' => 2]])
-    ->on($config) # override global config
+     # override global config
+    ->on($config);
 
 v_dd($u, ['x' => 1, (object)['y' => 1]])
     # override global config
     ->presetCompact(10)
     ->showKeyOnly(['connection', 'attributes.name'])
     ->withProperties(['fillable', 'hidden', 'connection', 'attributes'])
-    ->withoutProperties(['hidden'])
-;
+    ->withoutProperties(['hidden']);
 ```
 
 ### FOR ME ####
