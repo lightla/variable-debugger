@@ -2,34 +2,48 @@
 ### FOR YOU ###
 
 ```php
-// IF Laravel: add bootstrap/providers.php for Graceful Exit
-VariableDebuggerLaravelServiceProvider::class
+# IF Laravel: add VariableDebuggerLaravelServiceProvider for Graceful Exit
+#   + Laravel 12: add bootstrap/providers.php
+#   + Laravel 10: add to config/app.php, at key 'providers'
 
 # Global Config
 v_gl_config()
-    ->presetCompact(15, false)
-    ->presetDetailed(15, false)
-    ->useWebThemeDark()
-    ->useCliThemeLight()
-//    ->withProperties() # warning (not use for global config)
+    ->withProjectRootPath(base_path()) # recommended
+    ->withMaxDepth(VariableDebugConfig::DEFAULT_MAX_DEPTH) # recommended
+    ->withMaxLine(VariableDebugConfig::DEFAULT_MAX_LINE) # recommended
+    >addClassPropertiesFromPluginLaravel() # recommended
+    >addClassPropertiesFromPluginPDO() # recommended
+    
+# Config
+$config = \lightla\VariableDebugger\VariableDebugConfig::builder()
+    ->presetCompact(15, false)  # shortcut config for compact mode
+    ->presetDetailed(15, false) # shortcut config for detailed mode 
+    ->useWebThemeDark()         # Default web: Dark
+    ->useCliThemeNoColor()      # Default cli: NoColor
+    # ->withProperties() # WARNING - NOT USE for global config
     ->addClassProperties(\App\Models\User::class, ['attributes'])
-    ->addClassPropertiesFromPluginLaravel()
-    ->addClassPropertiesFromPluginPDO()
-    ->addBuildLaterClassProperties(\App\Models\User::class, function (\App\Models\User $user) {
-        return [
-            'attributes' => $user->getAttributes(),
-        ]       
-    })
-    // ->addClassPropertiesFromPlugin(
-    //      new VariableDebugClassPropertyPluginAdapterLaravel
-    //  );
+    # Build Later (Because PDO is a Native Extension, cannot Reflection
+    ->addBuildLaterClassProperties(PDO::class, function (PDO $pdo) {
+        return ['inTransaction' => $pdo->inTransaction()];
+    }) 
+    ->addClassPropertiesFromPlugin( 
+        # You can add custom your plugin
+        new VariableDebugClassPropertyPluginAdapterLaravel()
+    ) 
+    ->addClassPropertiesFromPluginLaravel() # Plugin snippet for Laravel (if use Laravel)
+    ->addClassPropertiesFromPluginPDO() # Plugin snippet for PDO
+    # ->withShowKeyOnly(true) # WARNING - NOT USE for global config
+    # ->withIgnoredShowKeyProperties(['field1.key1', 'field2']) # have effected if showKeyOnly enabled
+    ->build()
 
 # Usecase
 $u = \App\Models\User::factory()->create();
 
-v_dump($u, ['x' => ['tmp1' => 1, 'tmp2' => 2]])->withProperties(['x.tmp1']);
+v_dump($u, ['x' => ['tmp1' => 1, 'tmp2' => 2]])
+    ->on($config)
 
 v_dd($u, ['x' => 1, (object)['y' => 1]])
+    ->presetCompact(10)
     ->showKeyOnly(['connection', 'attributes.name'], true)
     ->withProperties(['fillable', 'hidden', 'connection', 'attributes'])
     ->withoutProperties(['hidden'])
