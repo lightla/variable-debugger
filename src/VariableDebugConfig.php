@@ -11,6 +11,7 @@ class VariableDebugConfig
 {
     private static ?VariableDebugConfig $globalConfig = null;
 
+    private const DEFAULT_ALLOW_PRINT = true;
     private const DEFAULT_MAX_DEPTH = 10;
     private const DEFAULT_SHOW_ARRAY_MODE = VariableDebugConfigArrayShowMode::SHOW_ALL_ELEMENT;
     private const DEFAULT_MAX_LINE = 200;
@@ -18,7 +19,8 @@ class VariableDebugConfig
     private const DEFAULT_SHOW_EXCLUDED_COUNT = true;
 
     public function __construct(
-        private ?string                           $projectRootPath = '',
+        private ?bool                             $allowPrint = null,
+        private ?string                           $projectRootPath = null,
         private ?int                              $maxDepth = null,
         private ?int                              $maxLine = null,
         private ?VariableDebugConfigArrayShowMode $showArrayMode = null,
@@ -165,6 +167,26 @@ class VariableDebugConfig
     }
 
     /**
+     * @return bool|null
+     */
+    public function getAllowPrint(): ?bool
+    {
+        return $this->allowPrint;
+    }
+
+    #-----------------
+    # RESOLVE BLOCK
+    #-----------------
+
+    /**
+     * @return bool
+     */
+    public function resolveAllowPrintOrDefault(): bool
+    {
+        return $this->allowPrint ?? self::DEFAULT_ALLOW_PRINT;
+    }
+
+    /**
      * @return VariableDebugCliColorTheme
      */
     public function resolveCliThemeOrDefault(): VariableDebugCliColorTheme
@@ -275,6 +297,7 @@ class VariableDebugConfig
     public function merge(?VariableDebugConfig $config): VariableDebugConfig
     {
         return new VariableDebugConfig(
+            $this->allowPrint ?? $config?->getAllowPrint(),
             $this->projectRootPath ?? $config?->getProjectRootPath(),
             $this->maxDepth ?? $config?->getMaxDepth(),
             $this->maxLine ?? $config?->getMaxLine(),

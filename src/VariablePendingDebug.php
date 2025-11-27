@@ -37,6 +37,13 @@ class VariablePendingDebug
         $this->variableDebugConfig = $config;
     }
 
+    public function allowPrint(bool $allowPrint = true): static
+    {
+        $this->configBuilder->allowPrint($allowPrint);
+
+        return $this;
+    }
+
     public function presetCompact(?int $maxDepth = null, ?bool $showArrayOnlyFirstElement = null): static
     {
         $this->configBuilder->presetCompact($maxDepth, $showArrayOnlyFirstElement);

@@ -9,6 +9,7 @@ trait VariableDebugConfigBuilderBuildTrait
     private function doBuild(): VariableDebugConfig
     {
         return new VariableDebugConfig(
+            $this->allowPrint,
             $this->projectRootPath,
             $this->maxDepth,
             $this->maxLine,

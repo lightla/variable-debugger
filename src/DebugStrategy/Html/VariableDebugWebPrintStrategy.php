@@ -13,6 +13,10 @@ class VariableDebugWebPrintStrategy implements VariableDebugPrintStrategy
         array $backtrace,
         ...$vars
     ): void {
+        if (! $config->resolveAllowPrintOrDefault()) {
+            return;
+        }
+
         static $scriptAdded = false;
         $theme = $config->resolveWebThemeOrDefault();
 

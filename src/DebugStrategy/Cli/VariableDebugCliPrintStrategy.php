@@ -13,6 +13,10 @@ class VariableDebugCliPrintStrategy implements VariableDebugPrintStrategy
         array $backtrace,
         ...$vars
     ): void {
+        if (! $config->resolveAllowPrintOrDefault()) {
+            return;
+        }
+
         $colorTheme = $config->resolveCliThemeOrDefault();
         $caller = $backtrace[0];
         $file = $this->calculateFilePathWithoutProjectRootPath($config, $caller['file']);

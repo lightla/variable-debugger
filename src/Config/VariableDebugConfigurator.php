@@ -6,11 +6,11 @@ use lightla\VariableDebugger\Adapters\Laravel\VariableDebugClassPropertyPluginAd
 use lightla\VariableDebugger\Adapters\PDO\VariableDebugClassPropertyPluginAdapterPDO;
 use lightla\VariableDebugger\Adapters\VariableDebugClassPropertyPluginAdapter;
 use lightla\VariableDebugger\DebugStrategy\Cli\VariableDebugCliColorTheme;
-use lightla\VariableDebugger\DebugStrategy\Cli\VariableDebugCliPrintStrategy;
 use lightla\VariableDebugger\DebugStrategy\Html\VariableDebugWebColorTheme;
 
 class VariableDebugConfigurator
 {
+    protected ?bool $allowPrint = null;
     protected string $projectRootPath = '';
     protected ?int $maxDepth = null;
     protected ?int $maxLine = null;
@@ -26,6 +26,13 @@ class VariableDebugConfigurator
     protected ?bool $showExcludedCount = null;
     protected ?array $includedClassProperties = null;
     protected ?array $includedBuildLaterClassProperties = null;
+
+    public function allowPrint(?int $allowPrint): static
+    {
+        $this->allowPrint = $allowPrint;
+
+        return $this;
+    }
 
     /**
      * @param int|null $maxDepth
