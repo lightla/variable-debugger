@@ -17,7 +17,6 @@ class VariableDebugWebPrintStrategy implements VariableDebugPrintStrategy
             return;
         }
 
-        static $scriptAdded = false;
         $theme = $config->resolveWebThemeOrDefault();
 
         $caller = $backtrace[0];
@@ -31,10 +30,19 @@ class VariableDebugWebPrintStrategy implements VariableDebugPrintStrategy
         $bdr = $theme->border;
         $fp = $theme->filePath;
 
-        if (!$scriptAdded) {
-            echo '<script>function vdToggle(e){const c=e.nextSibling,d=e.querySelector(".vd-dots");if(c.style.display==="none"){c.style.display="";d.innerHTML="&lt;&lt;&lt;"}else{c.style.display="none";d.textContent="..."}}</script>';
-            $scriptAdded = true;
-        }
+        echo $this->minimize('<script>
+            if (typeof vdToggle === "undefined") {
+                function vdToggle(e){
+                    const c=e.nextSibling,d=e.querySelector(".vd-dots");
+                    
+                    if(c.style.display==="none"){
+                        c.style.display="";d.innerHTML="&lt;&lt;&lt;"
+                    }else{
+                        c.style.display="none";d.textContent="..."
+                    }
+                }
+            }
+        </script>');
 
         echo "<div style=\"background:{$bg};color:{$txt};padding:15px;margin:15px 0;border:1px solid {$bdr};font-family:Consolas,Monaco,monospace;font-size:12px;z-index:99999;\">";
         echo "<div style=\"border-bottom:1px solid {$bdr};padding-bottom:10px;margin-bottom:10px;color:{$fp};\">";
@@ -279,5 +287,10 @@ class VariableDebugWebPrintStrategy implements VariableDebugPrintStrategy
     private function c(VariableDebugWebColorTheme $theme, string $color, string $text): string
     {
         return $color ? "<span style=\"color:{$color};\">{$text}</span>" : $text;
+    }
+
+    private function minimize(string $raw): string
+    {
+        return preg_replace('/\s+/', '', $raw);
     }
 }
