@@ -31,7 +31,7 @@ class VariableDebugWebPrintStrategy implements VariableDebugPrintStrategy
         $fp = $theme->filePath;
 
         echo $this->minimizeEndLine('<script>
-            if (typeof vdToggle === "undefined") {
+            if(typeof vdToggle === "undefined"){
                 function vdToggle(e){
                     const c=e.nextSibling,d=e.querySelector(".vd-dots");
                     if(c.style.display==="none"){
