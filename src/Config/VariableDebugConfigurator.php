@@ -6,12 +6,15 @@ use lightla\VariableDebugger\Adapters\Laravel\VariableDebugClassPropertyPluginAd
 use lightla\VariableDebugger\Adapters\PDO\VariableDebugClassPropertyPluginAdapterPDO;
 use lightla\VariableDebugger\Adapters\VariableDebugClassPropertyPluginAdapter;
 use lightla\VariableDebugger\DebugStrategy\Cli\VariableDebugCliColorTheme;
-use lightla\VariableDebugger\DebugStrategy\Html\VariableDebugWebColorTheme;
+use lightla\VariableDebugger\DebugStrategy\Cli\VariableDebugCliPrintStrategy;
+use lightla\VariableDebugger\DebugStrategy\Web\VariableDebugWebColorTheme;
+use lightla\VariableDebugger\DebugStrategy\Web\VariableDebugWebPrintStrategy;
+use lightla\VariableDebugger\VariableDebugPrintStrategy;
 
 class VariableDebugConfigurator
 {
     protected ?bool $allowPrint = null;
-    protected string $projectRootPath = '';
+    protected ?string $projectRootPath = null;
     protected ?int $maxDepth = null;
     protected ?int $maxLine = null;
     protected ?VariableDebugConfigArrayShowMode $showArrayMode = null;
@@ -26,6 +29,7 @@ class VariableDebugConfigurator
     protected ?bool $showExcludedCount = null;
     protected ?array $includedClassProperties = null;
     protected ?array $includedBuildLaterClassProperties = null;
+    protected ?VariableDebugPrintStrategy $printStrategy = null;
 
     public function allowPrint(?int $allowPrint): static
     {
@@ -73,7 +77,18 @@ class VariableDebugConfigurator
         return $this;
     }
 
-    public function withProjectRootPath(string $projectRootPath): self
+    public function runningInCli(?bool $runningInCli = null): self
+    {
+        if (is_bool($runningInCli)) {
+            $this->printStrategy = $runningInCli
+                ? new VariableDebugCliPrintStrategy
+                : new VariableDebugWebPrintStrategy;
+        }
+
+        return $this;
+    }
+
+    public function withProjectRootPath(?string $projectRootPath): self
     {
         $this->projectRootPath = $projectRootPath;
 

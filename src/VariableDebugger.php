@@ -2,23 +2,15 @@
 namespace lightla\VariableDebugger;
 
 use lightla\VariableDebugger\DebugStrategy\Cli\VariableDebugCliPrintStrategy;
-use lightla\VariableDebugger\DebugStrategy\Html\VariableDebugWebPrintStrategy;
+use lightla\VariableDebugger\DebugStrategy\Web\VariableDebugWebPrintStrategy;
 use lightla\VariableDebugger\Exceptions\VariableDebugGracefulExitException;
 
 class VariableDebugger
 {
-    private VariableDebugPrintStrategy $printStrategy;
-
     public function __construct(
         private VariableDebugConfig $config,
-        ?VariableDebugPrintStrategy $printStrategy = null,
     )
     {
-        if ($printStrategy) {
-            $this->printStrategy = $printStrategy;
-        } else {
-            $this->autoDetectPrintStrategy();
-        }
     }
 
     /**
@@ -32,24 +24,6 @@ class VariableDebugger
     public function setConfig(VariableDebugConfig $config): self
     {
         $this->config = $config;
-
-        return $this;
-    }
-
-    public function setPrintStrategy(VariableDebugPrintStrategy $printStrategy): self
-    {
-        $this->printStrategy = $printStrategy;
-
-        return $this;
-    }
-
-    public function autoDetectPrintStrategy(): self
-    {
-        $isCli = (PHP_SAPI === 'cli');
-
-        $this->printStrategy = $isCli
-            ? new VariableDebugCliPrintStrategy()
-            : new VariableDebugWebPrintStrategy();
 
         return $this;
     }
@@ -103,7 +77,8 @@ class VariableDebugger
      */
     public function dumpFromTrace(array $backtrace, ...$vars): void
     {
-        $this->printStrategy->printFromTrace($this->config, $backtrace, ...$vars);
+        $this->config->resolvePrintStrategyOrDefault()
+            ->printFromTrace($this->config, $backtrace, ...$vars);
     }
 
     #------------------

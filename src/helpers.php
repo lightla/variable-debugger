@@ -18,7 +18,6 @@ function v_dump(...$vars): VariablePendingDebug
 
     $variableDebugger = new VariableDebugger(
         $globalConfig?->merge($config) ?? $config,
-            null
     );
 
     return new VariablePendingDebug(

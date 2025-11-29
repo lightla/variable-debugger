@@ -5,7 +5,9 @@ namespace lightla\VariableDebugger;
 use lightla\VariableDebugger\Config\VariableDebugConfigArrayShowMode;
 use lightla\VariableDebugger\Config\VariableDebugConfigBuilder;
 use lightla\VariableDebugger\DebugStrategy\Cli\VariableDebugCliColorTheme;
-use lightla\VariableDebugger\DebugStrategy\Html\VariableDebugWebColorTheme;
+use lightla\VariableDebugger\DebugStrategy\Cli\VariableDebugCliPrintStrategy;
+use lightla\VariableDebugger\DebugStrategy\Web\VariableDebugWebColorTheme;
+use lightla\VariableDebugger\DebugStrategy\Web\VariableDebugWebPrintStrategy;
 
 class VariableDebugConfig
 {
@@ -19,6 +21,7 @@ class VariableDebugConfig
     private const DEFAULT_SHOW_EXCLUDED_COUNT = true;
 
     public function __construct(
+        private ?VariableDebugPrintStrategy       $printStrategy = null,
         private ?bool                             $allowPrint = null,
         private ?string                           $projectRootPath = null,
         private ?int                              $maxDepth = null,
@@ -174,6 +177,14 @@ class VariableDebugConfig
         return $this->allowPrint;
     }
 
+    /**
+     * @return VariableDebugPrintStrategy|null
+     */
+    public function getPrintStrategy(): ?VariableDebugPrintStrategy
+    {
+        return $this->printStrategy;
+    }
+
     #-----------------
     # RESOLVE BLOCK
     #-----------------
@@ -291,12 +302,33 @@ class VariableDebugConfig
     }
 
     /**
+     * @return VariableDebugPrintStrategy
+     */
+    public function resolvePrintStrategyOrDefault(): VariableDebugPrintStrategy
+    {
+        if ($this->printStrategy) {
+            return $this->printStrategy;
+        }
+
+        $isCli = (
+            PHP_SAPI === 'cli'
+            && empty($_SERVER['HTTP_HOST'])
+            && empty($_SERVER['REQUEST_URI'])
+        );
+
+        return $isCli
+            ? new VariableDebugCliPrintStrategy()
+            : new VariableDebugWebPrintStrategy();
+    }
+
+    /**
      * @param ?VariableDebugConfig $config
      * @return VariableDebugConfig
      */
     public function merge(?VariableDebugConfig $config): VariableDebugConfig
     {
         return new VariableDebugConfig(
+            $this->printStrategy ?? $config?->getPrintStrategy(),
             $this->allowPrint ?? $config?->getAllowPrint(),
             $this->projectRootPath ?? $config?->getProjectRootPath(),
             $this->maxDepth ?? $config?->getMaxDepth(),

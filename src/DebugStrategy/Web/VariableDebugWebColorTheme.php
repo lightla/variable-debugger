@@ -1,6 +1,6 @@
 <?php
 
-namespace lightla\VariableDebugger\DebugStrategy\Html;
+namespace lightla\VariableDebugger\DebugStrategy\Web;
 
 class VariableDebugWebColorTheme
 {

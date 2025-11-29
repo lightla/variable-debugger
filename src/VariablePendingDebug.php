@@ -37,6 +37,13 @@ class VariablePendingDebug
         $this->variableDebugConfig = $config;
     }
 
+    public function runningInCli(bool $runningInCli = true): static
+    {
+        $this->configBuilder->runningInCli($runningInCli);
+
+        return $this;
+    }
+
     public function allowPrint(bool $allowPrint = true): static
     {
         $this->configBuilder->allowPrint($allowPrint);

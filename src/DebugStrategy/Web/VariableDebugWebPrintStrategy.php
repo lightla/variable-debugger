@@ -1,6 +1,6 @@
 <?php
 
-namespace lightla\VariableDebugger\DebugStrategy\Html;
+namespace lightla\VariableDebugger\DebugStrategy\Web;
 
 use lightla\VariableDebugger\Parsed\VariableDebugParsedInfo;
 use lightla\VariableDebugger\VariableDebugConfig;
