@@ -30,11 +30,10 @@ class VariableDebugWebPrintStrategy implements VariableDebugPrintStrategy
         $bdr = $theme->border;
         $fp = $theme->filePath;
 
-        echo $this->minimize('<script>
+        echo $this->minimizeEndLine('<script>
             if (typeof vdToggle === "undefined") {
                 function vdToggle(e){
                     const c=e.nextSibling,d=e.querySelector(".vd-dots");
-                    
                     if(c.style.display==="none"){
                         c.style.display="";d.innerHTML="&lt;&lt;&lt;"
                     }else{
@@ -289,8 +288,8 @@ class VariableDebugWebPrintStrategy implements VariableDebugPrintStrategy
         return $color ? "<span style=\"color:{$color};\">{$text}</span>" : $text;
     }
 
-    private function minimize(string $raw): string
+    private function minimizeEndLine(string $raw): string
     {
-        return preg_replace('/\s+/', '', $raw);
+        return preg_replace('/\r?\n\s*/', '', $raw);
     }
 }
