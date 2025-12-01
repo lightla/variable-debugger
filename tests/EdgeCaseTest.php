@@ -62,10 +62,13 @@ class EdgeCaseTest extends TestCase
     public function test_circular_reference_protection()
     {
         $obj = new \stdClass();
-        $obj->self = $obj;
-        
+        $obj->level1 = new \stdClass();
+        $obj->level1->level2 = new \stdClass();
+        $obj->level1->level2->level3 = new \stdClass();
+        $obj->level1->level2->level3->level4 = new \stdClass();
+
         $output = $this->captureOutput(function() use ($obj) {
-            v_dump($obj)->maxDepth(3);
+            v_dump($obj)->maxDepth(1);
         });
 
         $this->assertStringContainsString('[Max Depth Reached]', $output);

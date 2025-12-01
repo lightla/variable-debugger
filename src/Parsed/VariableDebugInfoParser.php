@@ -28,7 +28,15 @@ class VariableDebugInfoParser
         if ($depth > $maxDepth) {
             $info->isTruncated = true;
             $info->truncatedMessage = '[Max Depth Reached]';
-            $info->valueType = 'truncated';
+            if (is_object($var)) {
+                $info->valueType = 'object';
+                $info->className = get_class($var);
+            } elseif (is_array($var)) {
+                $info->valueType = 'array';
+                $info->count = count($var);
+            } else {
+                $info->valueType = 'truncated';
+            }
             return $info;
         }
 
@@ -358,6 +366,8 @@ class VariableDebugInfoParser
                     $childInfo->className = $parsed->className;
                     $childInfo->count = $parsed->count;
                     $childInfo->children = $parsed->children;
+                    $childInfo->isTruncated = $parsed->isTruncated;
+                    $childInfo->truncatedMessage = $parsed->truncatedMessage;
                 }
             }
 

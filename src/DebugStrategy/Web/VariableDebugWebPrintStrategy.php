@@ -196,6 +196,10 @@ class VariableDebugWebPrintStrategy implements VariableDebugPrintStrategy
         VariableDebugParsedInfo $info,
         string $indent
     ): string {
+        if ($info->isTruncated) {
+            return $this->c($theme, $theme->comment, $info->truncatedMessage);
+        }
+
         $output = '';
 
         if ($config->getShowValueType()) {
@@ -203,6 +207,10 @@ class VariableDebugWebPrintStrategy implements VariableDebugPrintStrategy
                 . $this->c($theme, $theme->className, htmlspecialchars($info->className)) . ') ';
         } else {
             $output .= $this->c($theme, $theme->className, htmlspecialchars($info->className)) . ' ';
+        }
+
+        if (empty($info->children) && !$info->isTruncated) {
+            return $output . $this->c($theme, $theme->comment, '{}');
         }
 
         $output .= '<span class="vd-toggle" onclick="vdToggle(this)" style="cursor:pointer;user-select:none;">{<span class="vd-dots">&lt;&lt;&lt;</span></span><span class="vd-content"><br>';

@@ -101,7 +101,7 @@ class PropertyFilterTest extends TestCase
         $data = ['email' => 'test@example.com', 'password' => 'secret'];
         
         $output = $this->captureOutput(function() use ($data) {
-            v_dump($data)->showKeyOnly(true);
+            v_dump($data)->showKeyOnly();
         });
 
         $this->assertStringContainsString('"email"', $output);
@@ -118,7 +118,7 @@ class PropertyFilterTest extends TestCase
         ];
         
         $output = $this->captureOutput(function() use ($data) {
-            v_dump($data)->showKeyOnly(true, ['name']);
+            v_dump($data)->showKeyOnly(['name'], true);
         });
 
         $this->assertStringContainsString('John', $output);

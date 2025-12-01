@@ -185,17 +185,24 @@ class VariableDebugCliPrintStrategy implements VariableDebugPrintStrategy
         VariableDebugParsedInfo $info,
         string $indent
     ): string {
+        if ($info->isTruncated) {
+            return $colorTheme->comment . $info->truncatedMessage;
+        }
+
         $output = '';
 
         if ($config->getShowValueType()) {
             $output .= $colorTheme->type . "object" . $colorTheme->punctuation
-                . "(" . $colorTheme->className . $info->className . $colorTheme->punctuation . ") "
-                . $colorTheme->punctuation . "{" . PHP_EOL;
+                . "(" . $colorTheme->className . $info->className . $colorTheme->punctuation . ") ";
         } else {
-            $output .= $colorTheme->className . $info->className . " "
-                . $colorTheme->punctuation . "{" . PHP_EOL;
+            $output .= $colorTheme->className . $info->className . " ";
         }
 
+        if (empty($info->children) && !$info->isTruncated) {
+            return $output . $colorTheme->punctuation . "{}";
+        }
+
+        $output .= $colorTheme->punctuation . "{" . PHP_EOL;
         $newIndent = $indent . "  ";
 
         foreach ($info->children as $child) {
