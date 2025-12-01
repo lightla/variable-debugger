@@ -36,7 +36,9 @@ v_gl_config()
     ->withMaxLine(VariableDebugConfig::DEFAULT_MAX_LINE) # recommended
     ->addClassPropertiesFromPluginLaravel() # recommended
     ->addClassPropertiesFromPluginPDO() # recommended
-    ->withShowExcludedCount(true); # recommended
+    ->withShowExcludedCount(true) # recommended
+    ->useTerminationExitSuccess(true) # recommended
+    ; 
     
 # Config
 $config = \lightla\VariableDebugger\VariableDebugConfig::builder()
@@ -44,6 +46,9 @@ $config = \lightla\VariableDebugger\VariableDebugConfig::builder()
     ->presetDetailed(15, false) # shortcut config for detailed mode 
     ->useWebThemeDark()         # Default web: Dark
     ->useCliThemeNoColor()      # Default cli: NoColor
+    ->useTerminationMode(VariableDebugConfigTerminationMode::EXIT_SUCCESS)     
+    ->useTerminationExitSuccess()
+    ->useTerminationThrowException()
     # Show only properties, empty => show ALL (Called: includedProperties)
     ->withProperties([
         'key0', # default: VariableDebugClassPropertyShowValueMode::SHOW_DETAIL

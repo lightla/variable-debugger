@@ -17,6 +17,7 @@ class VariableDebugConfigurator
     protected ?string $projectRootPath = null;
     protected ?int $maxDepth = null;
     protected ?int $maxLine = null;
+    protected ?VariableDebugConfigTerminationMode $terminationMode = null;
     protected ?VariableDebugConfigArrayShowMode $showArrayMode = null;
     protected ?bool $showValueType = null;
     protected ?bool $showDetailAccessModifiers = null;
@@ -114,6 +115,23 @@ class VariableDebugConfigurator
         $this->showArrayMode = $showArrayMode;
 
         return $this;
+    }
+
+    public function useTerminationMode(VariableDebugConfigTerminationMode $terminationMode): self
+    {
+        $this->terminationMode = $terminationMode;
+
+        return $this;
+    }
+
+    public function useTerminationExitSuccess(): self
+    {
+        return $this->useTerminationMode(VariableDebugConfigTerminationMode::EXIT_SUCCESS);
+    }
+
+    public function useTerminationThrowException(): self
+    {
+        return $this->useTerminationMode(VariableDebugConfigTerminationMode::THROW_EXCEPTION);
     }
 
     public function withShowValueType(?bool $showValueType): self

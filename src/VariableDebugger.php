@@ -53,6 +53,12 @@ class VariableDebugger
      */
     public function exit(): void
     {
+        $exitMode = $this->config->resolveTerminationModeOrDefault();
+
+        if ($exitMode->isExitSuccess()) {
+            exit(0);
+        }
+
         throw new VariableDebugGracefulExitException();
     }
 

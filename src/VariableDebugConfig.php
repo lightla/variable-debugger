@@ -4,6 +4,7 @@ namespace lightla\VariableDebugger;
 
 use lightla\VariableDebugger\Config\VariableDebugConfigArrayShowMode;
 use lightla\VariableDebugger\Config\VariableDebugConfigBuilder;
+use lightla\VariableDebugger\Config\VariableDebugConfigTerminationMode;
 use lightla\VariableDebugger\DebugStrategy\Cli\VariableDebugCliColorTheme;
 use lightla\VariableDebugger\DebugStrategy\Cli\VariableDebugCliPrintStrategy;
 use lightla\VariableDebugger\DebugStrategy\Web\VariableDebugWebColorTheme;
@@ -16,26 +17,28 @@ class VariableDebugConfig
     private const DEFAULT_ALLOW_PRINT = true;
     private const DEFAULT_MAX_DEPTH = 10;
     private const DEFAULT_SHOW_ARRAY_MODE = VariableDebugConfigArrayShowMode::SHOW_ALL_ELEMENT;
+    private const DEFAULT_TERMINATION_MODE = VariableDebugConfigTerminationMode::EXIT_SUCCESS;
     private const DEFAULT_MAX_LINE = 200;
     private const DEFAULT_SHOW_KEY_ONLY = false;
     private const DEFAULT_SHOW_EXCLUDED_COUNT = true;
 
     public function __construct(
-        private ?VariableDebugPrintStrategy       $printStrategy = null,
-        private ?bool                             $allowPrint = null,
-        private ?string                           $projectRootPath = null,
-        private ?int                              $maxDepth = null,
-        private ?int                              $maxLine = null,
-        private ?VariableDebugConfigArrayShowMode $showArrayMode = null,
-        private ?bool                             $showValueType = null,
-        private ?bool                             $showDetailAccessModifiers = null,
-        private ?bool                             $showKeyOnly = null,
-        private ?array                            $ignoredShowKeyProperties = null,
-        private ?VariableDebugCliColorTheme       $cliTheme = null,
-        private ?VariableDebugWebColorTheme       $webTheme = null,
-        private ?array                            $includedProperties = [],
-        private ?array                            $excludedProperties = [],
-        private ?bool                             $showExcludedCount = null,
+        private ?VariableDebugPrintStrategy         $printStrategy = null,
+        private ?bool                               $allowPrint = null,
+        private ?string                             $projectRootPath = null,
+        private ?int                                $maxDepth = null,
+        private ?int                                $maxLine = null,
+        private ?VariableDebugConfigTerminationMode $terminationMode = null,
+        private ?VariableDebugConfigArrayShowMode   $showArrayMode = null,
+        private ?bool                               $showValueType = null,
+        private ?bool                               $showDetailAccessModifiers = null,
+        private ?bool                               $showKeyOnly = null,
+        private ?array                              $ignoredShowKeyProperties = null,
+        private ?VariableDebugCliColorTheme         $cliTheme = null,
+        private ?VariableDebugWebColorTheme         $webTheme = null,
+        private ?array                              $includedProperties = [],
+        private ?array                              $excludedProperties = [],
+        private ?bool                               $showExcludedCount = null,
         private ?array                            $includedClassProperties = [],
         private ?array                            $includedBuildLaterClassProperties = [],
     )
@@ -85,6 +88,14 @@ class VariableDebugConfig
     public function getShowArrayMode(): ?VariableDebugConfigArrayShowMode
     {
         return $this->showArrayMode;
+    }
+
+    /**
+     * @return VariableDebugConfigTerminationMode|null
+     */
+    public function getTerminationMode(): ?VariableDebugConfigTerminationMode
+    {
+        return $this->terminationMode;
     }
 
     public function getShowValueType(): ?bool
@@ -301,6 +312,11 @@ class VariableDebugConfig
         return $this->showArrayMode ?? self::DEFAULT_SHOW_ARRAY_MODE;
     }
 
+    public function resolveTerminationModeOrDefault(): VariableDebugConfigTerminationMode
+    {
+        return $this->terminationMode ?? self::DEFAULT_TERMINATION_MODE;
+    }
+
     /**
      * @return VariableDebugPrintStrategy
      */
@@ -333,6 +349,7 @@ class VariableDebugConfig
             $this->projectRootPath ?? $config?->getProjectRootPath(),
             $this->maxDepth ?? $config?->getMaxDepth(),
             $this->maxLine ?? $config?->getMaxLine(),
+            $this->terminationMode ?? $config?->getTerminationMode(),
             $this->showArrayMode ?? $config?->getShowArrayMode(),
             $this->showValueType ?? $config?->getShowValueType(),
             $this->showDetailAccessModifiers ?? $config?->getShowDetailAccessModifiers(),

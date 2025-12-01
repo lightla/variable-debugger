@@ -14,6 +14,7 @@ trait VariableDebugConfigBuilderBuildTrait
             $this->projectRootPath,
             $this->maxDepth,
             $this->maxLine,
+            $this->terminationMode,
             $this->showArrayMode,
             $this->showValueType,
             $this->showDetailAccessModifiers,
