@@ -84,6 +84,7 @@ v_dump($u, ['x' => ['tmp1' => 1, 'tmp2' => 2]])
 v_dd($u, ['x' => 1, (object)['y' => 1]])
     # override global config
     ->presetCompact(10)
+    ->useTerminationExitSuccess()
     ->showKeyOnly(['connection', 'attributes.name'])
     ->withProperties(['fillable', 'hidden', 'connection', 'attributes'])
     ->withoutProperties(['hidden']);

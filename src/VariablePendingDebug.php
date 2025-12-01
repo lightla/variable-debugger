@@ -4,6 +4,7 @@ namespace lightla\VariableDebugger;
 
 use lightla\VariableDebugger\Adapters\VariableDebugClassPropertyPluginAdapter;
 use lightla\VariableDebugger\Config\VariableDebugConfigBuilder;
+use lightla\VariableDebugger\Config\VariableDebugConfigTerminationMode;
 
 class VariablePendingDebug
 {
@@ -61,6 +62,27 @@ class VariablePendingDebug
     public function presetDetailed(?int $maxDepth = null, bool $showArrayOnlyFirstElement = false): static
     {
         $this->configBuilder->presetDetailed($maxDepth, $showArrayOnlyFirstElement);
+
+        return $this;
+    }
+
+    public function useTerminationMode(VariableDebugConfigTerminationMode $terminationMode): static
+    {
+        $this->configBuilder->useTerminationMode($terminationMode);
+
+        return $this;
+    }
+
+    public function useTerminationExitSuccess(): static
+    {
+        $this->configBuilder->useTerminationExitSuccess();
+
+        return $this;
+    }
+
+    public function useTerminationThrowException(): static
+    {
+        $this->configBuilder->useTerminationThrowException();
 
         return $this;
     }
