@@ -18,6 +18,11 @@ class VariableDebugInfoParser
         $maxDepth = $config->resolveMaxDepthOrDefault();
         $maxLine = $config->resolveMaxLineOrDefault();
 
+        $properties = $config->resolveIncludedPropertiesOrDefault();
+        $withoutProperties = $config->resolveExcludedPropertiesOrDefault();
+        $context = $this->buildPropertyContext($properties, $withoutProperties, $propertyPath);
+        $info->reflectsLiteralMatch = $context['hasIncludeAll'];
+
         if ($this->lineCount >= $maxLine) {
             $info->isTruncated = true;
             $info->truncatedMessage = '[Output Truncated]';
@@ -41,14 +46,20 @@ class VariableDebugInfoParser
         }
 
         if (is_array($var)) {
-            return $this->parseArray($var, $config, $depth, $propertyPath);
+            $parsed = $this->parseArray($var, $config, $depth, $propertyPath);
+            $parsed->reflectsLiteralMatch = $info->reflectsLiteralMatch;
+            return $parsed;
         }
 
         if (is_object($var)) {
-            return $this->parseObject($var, $config, $depth, $propertyPath);
+            $parsed = $this->parseObject($var, $config, $depth, $propertyPath);
+            $parsed->reflectsLiteralMatch = $info->reflectsLiteralMatch;
+            return $parsed;
         }
 
-        return $this->parseScalar($var, $config);
+        $parsed = $this->parseScalar($var, $config);
+        $parsed->reflectsLiteralMatch = $info->reflectsLiteralMatch;
+        return $parsed;
     }
 
     private function parseScalar(mixed $var, VariableDebugConfig $config): VariableDebugParsedInfo
@@ -107,7 +118,7 @@ class VariableDebugInfoParser
         $i = 0;
 
         foreach ($var as $key => $value) {
-            if (!$this->shouldShowProperty((string)$key, $context)) {
+            if (!$this->shouldShowProperty((string) $key, $context)) {
                 $excludedCount++;
                 continue;
             }
@@ -123,14 +134,22 @@ class VariableDebugInfoParser
             }
 
             $childInfo = new VariableDebugParsedInfo();
-            $childInfo->name = (string)$key;
+            $childInfo->name = (string) $key;
 
-            $nextPath = $this->getNextPath($propertyPath, (string)$key);
+            $nextPath = $this->getNextPath($propertyPath, (string) $key);
             if (!$this->shouldShowValue($showKeyOnly, $ignoredShowKeyPaths, $nextPath)) {
                 $childInfo->isHidden = true;
                 $childInfo->valueType = 'hidden';
             } else {
                 $parsed = $this->parseFrom($value, $config, $depth + 1, $nextPath);
+
+                // Check if the parsed child has actual content
+                // If it's an empty array/object with no displayable children, skip it
+                if (!$parsed->hasActualContent()) {
+                    $excludedCount++;
+                    continue;
+                }
+
                 $childInfo->value = $parsed->value;
                 $childInfo->valueType = $parsed->valueType;
                 $childInfo->className = $parsed->className;
@@ -139,6 +158,7 @@ class VariableDebugInfoParser
                 $childInfo->isTruncated = $parsed->isTruncated;
                 $childInfo->truncatedMessage = $parsed->truncatedMessage;
                 $childInfo->isTypeOnly = $parsed->isTypeOnly;
+                $childInfo->reflectsLiteralMatch = $parsed->reflectsLiteralMatch;
             }
 
             $info->children[] = $childInfo;
@@ -169,10 +189,10 @@ class VariableDebugInfoParser
     ): VariableDebugParsedInfo {
         $info = new VariableDebugParsedInfo();
         $info->valueType = 'object';
-        
+
         $ref = new \ReflectionClass($var);
         $info->className = $ref->getName();
-        
+
         $this->lineCount++;
         $maxLine = $config->resolveMaxLineOrDefault();
 
@@ -181,7 +201,7 @@ class VariableDebugInfoParser
         foreach ($buildLaterProperties as $buildClassName => $callback) {
             if ($var instanceof $buildClassName) {
                 $customProperties = $callback($var);
-                
+
                 foreach ($customProperties as $propName => $propValue) {
                     if ($this->lineCount >= $maxLine) {
                         $truncInfo = new VariableDebugParsedInfo();
@@ -191,21 +211,28 @@ class VariableDebugInfoParser
                         $info->children[] = $truncInfo;
                         return $info;
                     }
-                    
+
                     $childInfo = new VariableDebugParsedInfo();
                     $childInfo->name = $propName;
-                    
+
                     $parsed = $this->parseFrom($propValue, $config, $depth + 1, $this->getNextPath($propertyPath, $propName));
+
+                    // Check if the parsed child has actual content
+                    if (!$parsed->hasActualContent()) {
+                        $excludedCount++;
+                        continue;
+                    }
+
                     $childInfo->value = $parsed->value;
                     $childInfo->valueType = $parsed->valueType;
                     $childInfo->className = $parsed->className;
                     $childInfo->count = $parsed->count;
                     $childInfo->children = $parsed->children;
-                    
+
                     $info->children[] = $childInfo;
                     $this->lineCount++;
                 }
-                
+
                 return $info;
             }
         }
@@ -293,6 +320,13 @@ class VariableDebugInfoParser
                             $childInfo->count = $typeInfo['count'];
                         } else {
                             $parsed = $this->parseFrom($propValue, $config, $depth + 1, $fullPath);
+
+                            // Check if the parsed child has actual content
+                            if (!$parsed->hasActualContent()) {
+                                $excludedCount++;
+                                continue;
+                            }
+
                             $childInfo->value = $parsed->value;
                             $childInfo->valueType = $parsed->valueType;
                             $childInfo->className = $parsed->className;
@@ -300,6 +334,7 @@ class VariableDebugInfoParser
                             $childInfo->children = $parsed->children;
                             $childInfo->isTruncated = $parsed->isTruncated;
                             $childInfo->truncatedMessage = $parsed->truncatedMessage;
+                            $childInfo->reflectsLiteralMatch = $parsed->reflectsLiteralMatch;
                         }
                     } catch (\Throwable $e) {
                         $childInfo->valueType = 'error';
@@ -368,6 +403,7 @@ class VariableDebugInfoParser
                     $childInfo->children = $parsed->children;
                     $childInfo->isTruncated = $parsed->isTruncated;
                     $childInfo->truncatedMessage = $parsed->truncatedMessage;
+                    $childInfo->reflectsLiteralMatch = $parsed->reflectsLiteralMatch;
                 }
             }
 
@@ -475,14 +511,29 @@ class VariableDebugInfoParser
     {
         $properties = $this->extractPropertyPaths($properties);
         $hasIncludeAll = empty($properties);
-        $finalIncludes = $this->filterParentPaths($properties);
-        $finalExcludes = $this->filterParentPaths($withoutProperties);
+
+        // Since wildcards are involved, we cannot easily filter parent paths in a standard way
+        // So we use all properties.
+        $finalIncludes = $properties;
+        $finalExcludes = $withoutProperties;
 
         $remainingIncludes = [];
         foreach ($finalIncludes as $include) {
             $isExcluded = false;
             foreach ($finalExcludes as $exclude) {
-                if ($include === $exclude || str_starts_with($include, $exclude . '.')) {
+                $includeParts = explode('.', $include);
+                $excludeParts = explode('.', $exclude);
+
+                // Check if include path is excluded by an exclusion pattern
+                // We check if exclusion pattern is a prefix of include pattern
+                // Logic: pathStartsWith($path, $prefix) -> returns true if path starts with prefix (handling wildcards)
+                // But here both $include and $exclude are patterns.
+                // For simplicity, we assume exact string match for exclusion of include patterns if they are identical
+                // Or if exclude pattern is a prefix of include pattern.
+                // However, matching two patterns is complex. 
+                // Let's assume standard behavior: if exclude is "users.#" and include is "users.#.name", it is excluded.
+                // We reuse pathStartsWith but treating exclude as the prefix pattern.
+                if ($this->pathStartsWith($includeParts, $excludeParts)) {
                     $isExcluded = true;
                     break;
                 }
@@ -502,16 +553,37 @@ class VariableDebugInfoParser
 
         foreach ($remainingIncludes as $path) {
             $parts = explode('.', $path);
-            if ($this->pathStartsWith($parts, $currentParts)) {
-                if (count($parts) === $currentDepth) {
-                    $showAllNested = true;
-                    break;
-                } elseif (count($parts) > $currentDepth) {
-                    $include[$parts[$currentDepth]] = true;
-                }
-            } elseif ($this->pathStartsWith($currentParts, $parts)) {
+
+            // Check if strict prefix match
+            // $path is the pattern (e.g. users.#.name)
+            // $currentParts is the concrete path (e.g. users.0)
+
+            // Case 1: Concrete path is deeper than or equal to pattern length.
+            // AND concrete path STRICTLY matches pattern prefix.
+            if ($this->pathStartsWith($currentParts, $parts)) {
                 $showAllNested = true;
                 break;
+            }
+
+            // Case 2: Pattern is deeper than concrete path.
+            // AND pattern starts with concrete path (meaning concrete path is a valid prefix of pattern so far).
+            // We use pathStartsWith($parts, $currentParts) ? NO. 
+            // We need to check if $parts (pattern) matches $currentParts (concrete) up to $currentDepth.
+            // But pathStartsWith checks if first arg starts with second arg (prefix).
+            // AND pathStartsWith handles wildcards in the PREFIX argument.
+            // So pathStartsWith($currentParts, $parts) checks if $currentParts starts with pattern $parts.
+
+            // Here we want to check if the concrete path $currentParts matches the beginning of pattern $parts.
+            // So $parts is the "prefix" source (contains wildcards), but it is longer.
+            // We need to slice $parts to current depth and check.
+
+            $patternPrefixToCheck = array_slice($parts, 0, $currentDepth);
+            if ($this->pathStartsWith($currentParts, $patternPrefixToCheck)) {
+                // Determine the next segment to add to include list
+                if (count($parts) > $currentDepth) {
+                    $nextPart = $parts[$currentDepth];
+                    $include[$nextPart] = true;
+                }
             }
         }
 
@@ -521,7 +593,10 @@ class VariableDebugInfoParser
 
         foreach ($finalExcludes as $path) {
             $parts = explode('.', $path);
-            if ($this->pathStartsWith($parts, $currentParts) && count($parts) === $currentDepth + 1) {
+            $patternPrefixToCheck = array_slice($parts, 0, $currentDepth);
+
+            // If concrete current path matches the exclude pattern prefix
+            if ($this->pathStartsWith($currentParts, $patternPrefixToCheck) && count($parts) === $currentDepth + 1) {
                 $exclude[$parts[$currentDepth]] = true;
             }
         }
@@ -540,11 +615,31 @@ class VariableDebugInfoParser
             return false;
         }
         for ($i = 0; $i < count($prefix); $i++) {
-            if ($path[$i] !== $prefix[$i]) {
+            // $prefix[$i] is the pattern segment (from config), may contain wildcards
+            // $path[$i] is the concrete segment (from actual object traversal)
+            if (!$this->matchesSegment($prefix[$i], $path[$i])) {
                 return false;
             }
         }
         return true;
+    }
+
+    private function matchesSegment(string $pattern, string $actual): bool
+    {
+        if ($pattern === $actual) {
+            return true;
+        }
+
+        if ($pattern === '?') {
+            // ? matches any path segment (except dot, which acts as separator)
+            return true;
+        }
+
+        if ($pattern === '#' && is_numeric($actual)) {
+            return true;
+        }
+
+        return false;
     }
 
     private function shouldShowProperty(string $propName, array $context): bool
@@ -552,10 +647,33 @@ class VariableDebugInfoParser
         if (isset($context['exclude'][$propName])) {
             return false;
         }
+        // Check wildcard exclusions
+        if (isset($context['exclude']['?']) && $this->matchesSegment('?', $propName)) {
+            return false;
+        }
+        if (isset($context['exclude']['#']) && is_numeric($propName)) {
+            return false;
+        }
+
         if ($context['hasIncludeAll']) {
             return true;
         }
-        return isset($context['include'][$propName]);
+
+        // Exact match
+        if (isset($context['include'][$propName])) {
+            return true;
+        }
+
+        // Wildcard match
+        if (isset($context['include']['?']) && $this->matchesSegment('?', $propName)) {
+            return true;
+        }
+
+        if (isset($context['include']['#']) && is_numeric($propName)) {
+            return true;
+        }
+
+        return false;
     }
 
     private function getNextPath(string $currentPath, string $key): string
@@ -574,11 +692,26 @@ class VariableDebugInfoParser
         $currentParts = $currentPath === '' ? [] : explode('.', $currentPath);
         foreach ($ignoredPaths as $ignoredPath) {
             $ignoredParts = explode('.', $ignoredPath);
-            if ($currentPath === $ignoredPath || $this->pathStartsWith($currentParts, $ignoredParts)) {
+
+            // Check equality (with wildcards in ignoredPath)
+            if (count($currentParts) === count($ignoredParts) && $this->pathStartsWith($currentParts, $ignoredParts)) {
                 return true;
             }
-            if ($this->pathStartsWith($ignoredParts, $currentParts) && count($ignoredParts) > count($currentParts)) {
+
+            // Check if ignoredPath is a parent of currentPath (prefix match)
+            if (count($currentParts) > count($ignoredParts) && $this->pathStartsWith($currentParts, $ignoredParts)) {
                 return true;
+            }
+
+            // Check if ignoredPath is a child of currentPath
+            // For this, currentPath must be a prefix of ignoredPath (checking up to currentPath length)
+            if (count($ignoredParts) > count($currentParts)) {
+                $ignoredPrefix = array_slice($ignoredParts, 0, count($currentParts));
+                if ($this->pathStartsWith($currentParts, $ignoredPrefix)) {
+                    // Wait, pathStartsWith(concrete, pattern).
+                    // Here currentParts is concrete, ignoredPrefix is pattern.
+                    return true;
+                }
             }
         }
         return false;
@@ -602,15 +735,35 @@ class VariableDebugInfoParser
         }
 
         $globalProperties = $config->resolveIncludedPropertiesOrDefault();
+
+        // Exact matches
         if (isset($globalProperties[$fullPath])) {
             $value = $globalProperties[$fullPath];
             if ($value instanceof \lightla\VariableDebugger\Config\VariableDebugClassPropertyShowValueMode) {
                 $mode = $value;
             }
+            return $mode;
         } elseif (isset($globalProperties[$propName])) {
             $value = $globalProperties[$propName];
             if ($value instanceof \lightla\VariableDebugger\Config\VariableDebugClassPropertyShowValueMode) {
                 $mode = $value;
+            }
+            return $mode;
+        }
+
+        // Wildcard check
+        foreach ($globalProperties as $pattern => $value) {
+            if (!is_string($pattern))
+                continue;
+
+            $patternParts = explode('.', $pattern);
+            $pathParts = explode('.', $fullPath);
+
+            if (count($patternParts) === count($pathParts) && $this->pathStartsWith($pathParts, $patternParts)) {
+                if ($value instanceof \lightla\VariableDebugger\Config\VariableDebugClassPropertyShowValueMode) {
+                    $mode = $value;
+                }
+                return $mode;
             }
         }
 

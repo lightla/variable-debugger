@@ -56,6 +56,11 @@ $config = \lightla\VariableDebugger\VariableDebugConfig::builder()
         '0.key1.key2' => true, # same: VariableDebugClassPropertyShowValueMode::SHOW_DETAIL
         '0.key1.key2' => false, # same: VariableDebugClassPropertyShowValueMode::SHOW_TYPE_ONLY
     ])   # + WARNING - NOT USE for global config
+    ->withPatternProperties([
+        # pattern (#: any number, ?: any characters except dot (.)
+        '#.key0.?', 
+        '?.key0.#', 
+    ])
     # Ignore show properties, empty => skipped (Called: excludedProperties)
     ->withoutProperties(['key1', '0.key1.key2']) # WARNING - NOT USE for global config
     ->addClassProperties(\App\Models\User::class, ['attributes']) # Called: classIncludedProperties

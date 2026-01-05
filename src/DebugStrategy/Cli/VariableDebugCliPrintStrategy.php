@@ -13,7 +13,7 @@ class VariableDebugCliPrintStrategy implements VariableDebugPrintStrategy
         array $backtrace,
         ...$vars
     ): void {
-        if (! $config->resolveAllowPrintOrDefault()) {
+        if (!$config->resolveAllowPrintOrDefault()) {
             return;
         }
 
@@ -147,7 +147,7 @@ class VariableDebugCliPrintStrategy implements VariableDebugPrintStrategy
                 . "(" . $colorTheme->number . $info->count . $colorTheme->punctuation . ") ";
         }
 
-        if ($info->count === 0) {
+        if (empty($info->children)) {
             return $output . $colorTheme->punctuation . "[]";
         }
 
@@ -216,7 +216,7 @@ class VariableDebugCliPrintStrategy implements VariableDebugPrintStrategy
 
             if (!$child->isHidden) {
                 $output .= $colorTheme->punctuation . ": ";
-                
+
                 if ($child->isTypeOnly) {
                     $output .= $this->renderTypeOnly($colorTheme, $child);
                 } else {

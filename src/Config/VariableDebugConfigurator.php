@@ -30,6 +30,7 @@ class VariableDebugConfigurator
     protected ?bool $showExcludedCount = null;
     protected ?array $includedClassProperties = null;
     protected ?array $includedBuildLaterClassProperties = null;
+    protected ?array $includedPatternProperties = null;
     protected ?VariableDebugPrintStrategy $printStrategy = null;
 
     public function allowPrint(?int $allowPrint): static
@@ -47,9 +48,10 @@ class VariableDebugConfigurator
     public function presetCompact(?int $maxDepth = null, ?bool $showArrayOnlyFirstElement = null): static
     {
         $this->withMaxDepth($maxDepth)
-            ->withShowArrayMode(is_null($showArrayOnlyFirstElement)
+            ->withShowArrayMode(
+                is_null($showArrayOnlyFirstElement)
                 ? null
-                : ( $showArrayOnlyFirstElement
+                : ($showArrayOnlyFirstElement
                     ? VariableDebugConfigArrayShowMode::SHOW_FIRST_ELEMENT
                     : VariableDebugConfigArrayShowMode::SHOW_ALL_ELEMENT
                 )
@@ -64,9 +66,10 @@ class VariableDebugConfigurator
     public function presetDetailed(?int $maxDepth = null, bool $showArrayOnlyFirstElement = false): static
     {
         $this->withMaxDepth($maxDepth)
-            ->withShowArrayMode(is_null($showArrayOnlyFirstElement)
+            ->withShowArrayMode(
+                is_null($showArrayOnlyFirstElement)
                 ? null
-                : ( $showArrayOnlyFirstElement
+                : ($showArrayOnlyFirstElement
                     ? VariableDebugConfigArrayShowMode::SHOW_FIRST_ELEMENT
                     : VariableDebugConfigArrayShowMode::SHOW_ALL_ELEMENT
                 )
@@ -172,7 +175,7 @@ class VariableDebugConfigurator
     public function withProperties(?array $properties): self
     {
         $normalized = [];
-        
+
         foreach ($properties as $property => $value) {
             if (is_bool($value)) {
                 $normalized[$property] = $value
@@ -198,6 +201,39 @@ class VariableDebugConfigurator
         }
 
         $this->includedProperties = $normalized;
+
+        return $this;
+    }
+
+    public function withPatternProperties(?array $patterns): self
+    {
+        $normalized = [];
+
+        foreach ($patterns as $property => $value) {
+            if (is_bool($value)) {
+                $normalized[$property] = $value
+                    ? VariableDebugClassPropertyShowValueMode::SHOW_DETAIL
+                    : VariableDebugClassPropertyShowValueMode::SHOW_TYPE_ONLY;
+
+                continue;
+            }
+
+            if ($value instanceof VariableDebugClassPropertyShowValueMode) {
+                $normalized[$property] = $value;
+
+                continue;
+            }
+
+            if (is_int($property)) {
+                $normalized[$value] = VariableDebugClassPropertyShowValueMode::SHOW_DETAIL;
+
+                continue;
+            }
+
+            throw new \RuntimeException("include property patterns has error occur");
+        }
+
+        $this->includedPatternProperties = $normalized;
 
         return $this;
     }
@@ -228,11 +264,11 @@ class VariableDebugConfigurator
                 continue;
             }
 
-                if (is_int($property)) {
-                    $normalized[$value] = VariableDebugClassPropertyShowValueMode::SHOW_DETAIL;
+            if (is_int($property)) {
+                $normalized[$value] = VariableDebugClassPropertyShowValueMode::SHOW_DETAIL;
 
-                    continue;
-                }
+                continue;
+            }
 
             throw new \RuntimeException("adding class property {$className} has error occur");
         }

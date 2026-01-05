@@ -11,13 +11,12 @@ class VariablePendingDebug
     private ?VariableDebugConfig $variableDebugConfig = null;
 
     public function __construct(
-        private array                       $backtrace,
-        private VariableDebugger            $variableDebugger,
-        private readonly \Closure           $pendingDebugAction,
+        private array $backtrace,
+        private VariableDebugger $variableDebugger,
+        private readonly \Closure $pendingDebugAction,
         private ?VariableDebugConfigBuilder $configBuilder = null,
-    )
-    {
-        if (! $this->configBuilder) {
+    ) {
+        if (!$this->configBuilder) {
             $this->configBuilder = VariableDebugConfig::builder();
         }
     }
@@ -25,7 +24,7 @@ class VariablePendingDebug
     public function __destruct()
     {
         $this->variableDebugger->setConfig(
-        $this->variableDebugConfig ?:
+            $this->variableDebugConfig ?:
             $this->configBuilder->build()
                 ->merge(VariableDebugConfig::getGlobalConfig())
         );
@@ -106,6 +105,13 @@ class VariablePendingDebug
     public function withProperties(array $properties): static
     {
         $this->configBuilder->withProperties($properties);
+
+        return $this;
+    }
+
+    public function withPatternProperties(array $patterns): static
+    {
+        $this->configBuilder->withPatternProperties($patterns);
 
         return $this;
     }

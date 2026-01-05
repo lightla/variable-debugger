@@ -23,26 +23,26 @@ class VariableDebugConfig
     private const DEFAULT_SHOW_EXCLUDED_COUNT = true;
 
     public function __construct(
-        private ?VariableDebugPrintStrategy         $printStrategy = null,
-        private ?bool                               $allowPrint = null,
-        private ?string                             $projectRootPath = null,
-        private ?int                                $maxDepth = null,
-        private ?int                                $maxLine = null,
+        private ?VariableDebugPrintStrategy $printStrategy = null,
+        private ?bool $allowPrint = null,
+        private ?string $projectRootPath = null,
+        private ?int $maxDepth = null,
+        private ?int $maxLine = null,
         private ?VariableDebugConfigTerminationMode $terminationMode = null,
-        private ?VariableDebugConfigArrayShowMode   $showArrayMode = null,
-        private ?bool                               $showValueType = null,
-        private ?bool                               $showDetailAccessModifiers = null,
-        private ?bool                               $showKeyOnly = null,
-        private ?array                              $ignoredShowKeyProperties = null,
-        private ?VariableDebugCliColorTheme         $cliTheme = null,
-        private ?VariableDebugWebColorTheme         $webTheme = null,
-        private ?array                              $includedProperties = [],
-        private ?array                              $excludedProperties = [],
-        private ?bool                               $showExcludedCount = null,
-        private ?array                            $includedClassProperties = [],
-        private ?array                            $includedBuildLaterClassProperties = [],
-    )
-    {
+        private ?VariableDebugConfigArrayShowMode $showArrayMode = null,
+        private ?bool $showValueType = null,
+        private ?bool $showDetailAccessModifiers = null,
+        private ?bool $showKeyOnly = null,
+        private ?array $ignoredShowKeyProperties = null,
+        private ?VariableDebugCliColorTheme $cliTheme = null,
+        private ?VariableDebugWebColorTheme $webTheme = null,
+        private ?array $includedProperties = [],
+        private ?array $excludedProperties = [],
+        private ?bool $showExcludedCount = null,
+        private ?array $includedClassProperties = [],
+        private ?array $includedBuildLaterClassProperties = [],
+        private ?array $includedPatternProperties = [],
+    ) {
     }
 
     /**
@@ -146,6 +146,14 @@ class VariableDebugConfig
     public function getIncludedProperties(): ?array
     {
         return $this->includedProperties;
+    }
+
+    /**
+     * @return array|null
+     */
+    public function getIncludedPatternProperties(): ?array
+    {
+        return $this->includedPatternProperties;
     }
 
     /**
@@ -261,7 +269,10 @@ class VariableDebugConfig
      */
     public function resolveIncludedPropertiesOrDefault(): array
     {
-        return $this->includedProperties ?? [];
+        return array_merge(
+            $this->includedProperties ?? [],
+            $this->includedPatternProperties ?? []
+        );
     }
 
     /**
@@ -368,6 +379,7 @@ class VariableDebugConfig
                 $config?->getIncludedBuildLaterClassProperties() ?? [],
                 $this->includedBuildLaterClassProperties ?? []
             ),
+            $this->includedPatternProperties ?? $config?->getIncludedPatternProperties(),
         );
     }
 }

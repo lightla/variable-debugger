@@ -27,6 +27,7 @@ trait VariableDebugConfigBuilderBuildTrait
             $this->showExcludedCount,
             $this->includedClassProperties,
             $this->includedBuildLaterClassProperties,
+            $this->includedPatternProperties,
         );
     }
 
