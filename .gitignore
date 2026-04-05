@@ -1,5 +1,20 @@
+# Dependencies
 /vendor/
-/.idea/
-/.vscode/
+
+# Testing
 /.phpunit.result.cache
 /tests/DisabledTest.php
+
+# IDEs and Editors
+/.idea/
+/.vscode/
+*.swp
+*.swo
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Composer logs
+composer.phar
+composer.lock
