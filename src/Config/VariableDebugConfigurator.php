@@ -33,9 +33,23 @@ class VariableDebugConfigurator
     protected ?array $includedPatternProperties = null;
     protected ?VariableDebugPrintStrategy $printStrategy = null;
 
-    public function allowPrint(?int $allowPrint): static
+    public function allowPrint(?bool $allowPrint): static
     {
         $this->allowPrint = $allowPrint;
+
+        return $this;
+    }
+
+    public function enable(): static
+    {
+        $this->allowPrint = true;
+
+        return $this;
+    }
+
+    public function disable(): static
+    {
+        $this->allowPrint = false;
 
         return $this;
     }

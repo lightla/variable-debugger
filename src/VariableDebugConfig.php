@@ -181,17 +181,34 @@ class VariableDebugConfig
     }
 
     /**
-     * @return VariableDebugWebColorTheme|null
+     * @return VariableDebugCliColorTheme|null
      */
     public function getWebTheme(): ?VariableDebugWebColorTheme
     {
         return $this->webTheme;
     }
 
+    public function enable(): self
+    {
+        $new = clone $this;
+        $new->allowPrint = true;
+
+        return $new;
+    }
+
+    public function disable(): self
+    {
+        $new = clone $this;
+        $new->allowPrint = false;
+
+        return $new;
+    }
+
     /**
      * @return bool|null
      */
     public function getAllowPrint(): ?bool
+
     {
         return $this->allowPrint;
     }

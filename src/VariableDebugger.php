@@ -53,6 +53,10 @@ class VariableDebugger
      */
     public function exit(): void
     {
+        if (!$this->config->resolveAllowPrintOrDefault()) {
+            return;
+        }
+
         $exitMode = $this->config->resolveTerminationModeOrDefault();
 
         if ($exitMode->isExitSuccess()) {

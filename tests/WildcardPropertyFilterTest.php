@@ -22,7 +22,7 @@ class WildcardPropertyFilterTest extends TestCase
 
         // Pattern ?.nonexistent should show empty array
         $output = $this->captureOutput(function () use ($data) {
-            v_dump($data)->withPatternProperties(['?.nonexistent']);
+            v_dump($data)->withPatternProperties(['?.nonexistent'])->showExcludedCount(false);
         });
 
         // Should be completely empty, not showing keys
@@ -46,7 +46,7 @@ class WildcardPropertyFilterTest extends TestCase
 
         // Looking for completely wrong path
         $output = $this->captureOutput(function () use ($data) {
-            v_dump($data)->withProperties(['wrong.path.here']);
+            v_dump($data)->withProperties(['wrong.path.here'])->showExcludedCount(false);
         });
 
         $this->assertStringContainsString('[]', $output);
@@ -129,7 +129,7 @@ class WildcardPropertyFilterTest extends TestCase
 
         // Pattern requires full path to exist
         $output = $this->captureOutput(function () use ($data) {
-            v_dump($data)->withProperties(['user.profile.name.extra']);
+            v_dump($data)->withProperties(['user.profile.name.extra'])->showExcludedCount(false);
         });
 
         // 'name' is not an array/object, so 'extra' can't exist
@@ -255,7 +255,7 @@ class WildcardPropertyFilterTest extends TestCase
         ];
 
         $output = $this->captureOutput(function () use ($data) {
-            v_dump($data)->withPatternProperties(['#.#.something']);
+            v_dump($data)->withPatternProperties(['#.#.something'])->showExcludedCount(false);
         });
 
         $this->assertStringContainsString('[]', $output);
@@ -307,7 +307,7 @@ class WildcardPropertyFilterTest extends TestCase
 
         // Wrong path should show nothing
         $output2 = $this->captureOutput(function () use ($data) {
-            v_dump($data)->withProperties(['a.b.x.d.e']);
+            v_dump($data)->withProperties(['a.b.x.d.e'])->showExcludedCount(false);
         });
 
         $this->assertStringContainsString('[]', $output2);

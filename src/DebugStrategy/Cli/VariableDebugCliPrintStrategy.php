@@ -147,7 +147,7 @@ class VariableDebugCliPrintStrategy implements VariableDebugPrintStrategy
                 . "(" . $colorTheme->number . $info->count . $colorTheme->punctuation . ") ";
         }
 
-        if (empty($info->children)) {
+        if (empty($info->children) && (!$config->resolveShowExcludedCount() || $info->excludedCount === 0)) {
             return $output . $colorTheme->punctuation . "[]";
         }
 
@@ -198,7 +198,7 @@ class VariableDebugCliPrintStrategy implements VariableDebugPrintStrategy
             $output .= $colorTheme->className . $info->className . " ";
         }
 
-        if (empty($info->children) && !$info->isTruncated) {
+        if (empty($info->children) && !$info->isTruncated && (!$config->resolveShowExcludedCount() || $info->excludedCount === 0)) {
             return $output . $colorTheme->punctuation . "{}";
         }
 

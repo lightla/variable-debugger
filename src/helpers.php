@@ -48,6 +48,11 @@ function v_dd(...$vars): VariablePendingDebug
     );
 }
 
+function v_die(...$vars): VariablePendingDebug
+{
+    return v_dd(...$vars);
+}
+
 /**
  * @return callable|null
  * @throws Throwable
