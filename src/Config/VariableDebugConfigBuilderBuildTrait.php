@@ -11,6 +11,7 @@ trait VariableDebugConfigBuilderBuildTrait
         return new VariableDebugConfig(
             $this->printStrategy,
             $this->allowPrint,
+            $this->allowExit,
             $this->projectRootPath,
             $this->maxDepth,
             $this->maxLine,
@@ -36,6 +37,6 @@ trait VariableDebugConfigBuilderBuildTrait
      */
     private function doBuildWithInjectGlobal(): void
     {
-        VariableDebugConfig::mergeGlobalConfig($this->doBuild());
+        VariableDebugConfig::setGlobalConfig($this->doBuild());
     }
 }

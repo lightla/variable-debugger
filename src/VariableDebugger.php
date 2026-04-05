@@ -1,4 +1,5 @@
 <?php
+
 namespace lightla\VariableDebugger;
 
 use lightla\VariableDebugger\DebugStrategy\Cli\VariableDebugCliPrintStrategy;
@@ -9,8 +10,7 @@ class VariableDebugger
 {
     public function __construct(
         private VariableDebugConfig $config,
-    )
-    {
+    ) {
     }
 
     /**
@@ -53,7 +53,7 @@ class VariableDebugger
      */
     public function exit(): void
     {
-        if (!$this->config->resolveAllowPrintOrDefault()) {
+        if (!$this->config->resolveAllowExitOrDefault()) {
             return;
         }
 

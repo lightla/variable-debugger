@@ -14,6 +14,7 @@ use lightla\VariableDebugger\VariableDebugPrintStrategy;
 class VariableDebugConfigurator
 {
     protected ?bool $allowPrint = null;
+    protected ?bool $allowExit = null;
     protected ?string $projectRootPath = null;
     protected ?int $maxDepth = null;
     protected ?int $maxLine = null;
@@ -33,16 +34,10 @@ class VariableDebugConfigurator
     protected ?array $includedPatternProperties = null;
     protected ?VariableDebugPrintStrategy $printStrategy = null;
 
-    public function allowPrint(?bool $allowPrint): static
-    {
-        $this->allowPrint = $allowPrint;
-
-        return $this;
-    }
-
     public function enable(): static
     {
         $this->allowPrint = true;
+        $this->allowExit = true;
 
         return $this;
     }
@@ -50,6 +45,35 @@ class VariableDebugConfigurator
     public function disable(): static
     {
         $this->allowPrint = false;
+        $this->allowExit = false;
+
+        return $this;
+    }
+
+    public function enablePrint(): static
+    {
+        $this->allowPrint = true;
+
+        return $this;
+    }
+
+    public function disablePrint(): static
+    {
+        $this->allowPrint = false;
+
+        return $this;
+    }
+
+    public function enableExit(): static
+    {
+        $this->allowExit = true;
+
+        return $this;
+    }
+
+    public function disableExit(): static
+    {
+        $this->allowExit = false;
 
         return $this;
     }
@@ -181,7 +205,7 @@ class VariableDebugConfigurator
         } else {
             $this->ignoredShowKeyProperties = array_unique(array_merge(
                 $this->ignoredShowKeyProperties ?? [],
-                $ignoredShowKeyProperties,
+                $ignoredShowKeyProperties
             ));
         }
 
@@ -195,7 +219,7 @@ class VariableDebugConfigurator
         } else {
             $this->includedProperties = array_merge(
                 $this->includedProperties ?? [],
-                $this->normalizeProperties($properties, 'include properties'),
+                $this->normalizeProperties($properties, "include properties")
             );
         }
 
@@ -209,7 +233,7 @@ class VariableDebugConfigurator
         } else {
             $this->includedPatternProperties = array_merge(
                 $this->includedPatternProperties ?? [],
-                $this->normalizeProperties($patterns, 'include property patterns'),
+                $this->normalizeProperties($patterns, "include property patterns")
             );
         }
 
@@ -221,7 +245,10 @@ class VariableDebugConfigurator
         if (is_null($withoutProperties)) {
             $this->excludedProperties = null;
         } else {
-            $this->excludedProperties = array_unique(array_merge($this->excludedProperties ?? [], $withoutProperties));
+            $this->excludedProperties = array_unique(array_merge(
+                $this->excludedProperties ?? [],
+                $withoutProperties
+            ));
         }
 
         return $this;
@@ -231,7 +258,7 @@ class VariableDebugConfigurator
     {
         $this->includedClassProperties[$className] = array_merge(
             $this->includedClassProperties[$className] ?? [],
-            $this->normalizeProperties($properties, "adding class property {$className}"),
+            $this->normalizeProperties($properties, "adding class property {$className}")
         );
 
         return $this;

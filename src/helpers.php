@@ -8,11 +8,13 @@ use lightla\VariableDebugger\VariablePendingDebug;
 
 function v_gl_config(): VariableDebugConfigGlobalPendingBuilder
 {
-    return new VariableDebugConfigGlobalPendingBuilder();
+    return VariableDebugConfigGlobalPendingBuilder::getInstance();
 }
 
 function v_dump(...$vars): VariablePendingDebug
 {
+    VariableDebugConfigGlobalPendingBuilder::getInstance()->sync();
+
     $globalConfig = VariableDebugConfig::getGlobalConfig();
     $config = VariableDebugConfig::builder()->withMaxDepth(10)->build();
 
@@ -21,21 +23,27 @@ function v_dump(...$vars): VariablePendingDebug
     return new VariablePendingDebug(
         debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS, 1),
         $variableDebugger,
-        fn($backtrace) => $variableDebugger->dumpFromTrace($backtrace, ...$vars),
+        static function (array $backtrace, VariableDebugger $debugger) use ($vars) {
+            $debugger->dumpFromTrace($backtrace, ...$vars);
+        }
     );
 }
 
 function v_dd(...$vars): VariablePendingDebug
 {
+    VariableDebugConfigGlobalPendingBuilder::getInstance()->sync();
+
     $globalConfig = VariableDebugConfig::getGlobalConfig();
     $config = VariableDebugConfig::builder()->withMaxDepth(10)->build();
 
-    $variableDebugger = new VariableDebugger($globalConfig?->merge($config) ?? $config, null);
+    $variableDebugger = new VariableDebugger($globalConfig?->merge($config) ?? $config);
 
     return new VariablePendingDebug(
         debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS, 1),
         $variableDebugger,
-        fn($backtrace) => $variableDebugger->ddFromTrace($backtrace, ...$vars),
+        static function (array $backtrace, VariableDebugger $debugger) use ($vars) {
+            $debugger->ddFromTrace($backtrace, ...$vars);
+        }
     );
 }
 

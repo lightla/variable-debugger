@@ -44,9 +44,44 @@ class VariablePendingDebug
         return $this;
     }
 
-    public function allowPrint(bool $allowPrint = true): static
+    public function enable(): static
     {
-        $this->configBuilder->allowPrint($allowPrint);
+        $this->configBuilder->enable();
+
+        return $this;
+    }
+
+    public function disable(): static
+    {
+        $this->configBuilder->disable();
+
+        return $this;
+    }
+
+    public function enablePrint(): static
+    {
+        $this->configBuilder->enablePrint();
+
+        return $this;
+    }
+
+    public function disablePrint(): static
+    {
+        $this->configBuilder->disablePrint();
+
+        return $this;
+    }
+
+    public function enableExit(): static
+    {
+        $this->configBuilder->enableExit();
+
+        return $this;
+    }
+
+    public function disableExit(): static
+    {
+        $this->configBuilder->disableExit();
 
         return $this;
     }

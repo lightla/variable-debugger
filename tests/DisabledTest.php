@@ -60,7 +60,7 @@ class DisabledTest extends TestCase
         
         $this->assertEmpty($output);
 
-        v_gl_config()->enable();
+        v_gl_config()->allowPrint();
     }
 
     public function test_v_die_disabled_does_not_exit()

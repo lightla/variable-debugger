@@ -15,6 +15,7 @@ class VariableDebugConfig
     private static ?VariableDebugConfig $globalConfig = null;
 
     private const DEFAULT_ALLOW_PRINT = true;
+    private const DEFAULT_ALLOW_EXIT = true;
     private const DEFAULT_MAX_DEPTH = 10;
     private const DEFAULT_SHOW_ARRAY_MODE = VariableDebugConfigArrayShowMode::SHOW_ALL_ELEMENT;
     private const DEFAULT_TERMINATION_MODE = VariableDebugConfigTerminationMode::EXIT_SUCCESS;
@@ -25,6 +26,7 @@ class VariableDebugConfig
     public function __construct(
         private ?VariableDebugPrintStrategy $printStrategy = null,
         private ?bool $allowPrint = null,
+        private ?bool $allowExit = null,
         private ?string $projectRootPath = null,
         private ?int $maxDepth = null,
         private ?int $maxLine = null,
@@ -60,21 +62,6 @@ class VariableDebugConfig
     public static function setGlobalConfig(VariableDebugConfig $config): void
     {
         self::$globalConfig = $config;
-    }
-
-    /**
-     * @param VariableDebugConfig $config
-     * @return void
-     */
-    public static function mergeGlobalConfig(VariableDebugConfig $config): void
-    {
-        if (self::$globalConfig === null) {
-            self::$globalConfig = $config;
-
-            return;
-        }
-
-        self::$globalConfig->merge($config);
     }
 
     public static function getGlobalConfig(): ?VariableDebugConfig
@@ -196,36 +183,27 @@ class VariableDebugConfig
     }
 
     /**
-     * @return VariableDebugCliColorTheme|null
+     * @return VariableDebugWebColorTheme|null
      */
     public function getWebTheme(): ?VariableDebugWebColorTheme
     {
         return $this->webTheme;
     }
 
-    public function enable(): self
+    /**
+     * @return bool|null
+     */
+    public function getAllowPrint(): ?bool
     {
-        $new = clone $this;
-        $new->allowPrint = true;
-
-        return $new;
-    }
-
-    public function disable(): self
-    {
-        $new = clone $this;
-        $new->allowPrint = false;
-
-        return $new;
+        return $this->allowPrint;
     }
 
     /**
      * @return bool|null
      */
-    public function getAllowPrint(): ?bool
-
+    public function getAllowExit(): ?bool
     {
-        return $this->allowPrint;
+        return $this->allowExit;
     }
 
     /**
@@ -246,6 +224,14 @@ class VariableDebugConfig
     public function resolveAllowPrintOrDefault(): bool
     {
         return $this->allowPrint ?? self::DEFAULT_ALLOW_PRINT;
+    }
+
+    /**
+     * @return bool
+     */
+    public function resolveAllowExitOrDefault(): bool
+    {
+        return $this->allowExit ?? self::DEFAULT_ALLOW_EXIT;
     }
 
     /**
@@ -388,7 +374,8 @@ class VariableDebugConfig
     {
         return new VariableDebugConfig(
             $this->printStrategy ?? $config?->getPrintStrategy(),
-            $this->allowPrint ?? $config?->getAllowPrint(),
+            !is_null($this->allowPrint) ? $this->allowPrint : $config?->getAllowPrint(),
+            !is_null($this->allowExit) ? $this->allowExit : $config?->getAllowExit(),
             $this->projectRootPath ?? $config?->getProjectRootPath(),
             $this->maxDepth ?? $config?->getMaxDepth(),
             $this->maxLine ?? $config?->getMaxLine(),
