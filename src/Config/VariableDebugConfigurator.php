@@ -54,53 +54,48 @@ class VariableDebugConfigurator
         return $this;
     }
 
-    /**
-     * @param int|null $maxDepth
-     * @param bool $showArrayOnlyFirstElement
-     * @return $this
-     */
     public function presetCompact(?int $maxDepth = null, ?bool $showArrayOnlyFirstElement = null): static
     {
-        $this->withMaxDepth($maxDepth)
+        return $this
+            ->withMaxDepth($maxDepth)
             ->withShowArrayMode(
                 is_null($showArrayOnlyFirstElement)
-                ? null
-                : ($showArrayOnlyFirstElement
-                    ? VariableDebugConfigArrayShowMode::SHOW_FIRST_ELEMENT
-                    : VariableDebugConfigArrayShowMode::SHOW_ALL_ELEMENT
-                )
+                    ? null
+                    : (
+                        $showArrayOnlyFirstElement
+                            ? VariableDebugConfigArrayShowMode::SHOW_FIRST_ELEMENT
+                            : VariableDebugConfigArrayShowMode::SHOW_ALL_ELEMENT
+                    ),
             )
             ->withShowDetailAccessModifiers(false)
             ->withShowValueType(false)
             ->withShowExcludedCount(false);
-
-        return $this;
     }
 
     public function presetDetailed(?int $maxDepth = null, bool $showArrayOnlyFirstElement = false): static
     {
-        $this->withMaxDepth($maxDepth)
+        return $this
+            ->withMaxDepth($maxDepth)
             ->withShowArrayMode(
                 is_null($showArrayOnlyFirstElement)
-                ? null
-                : ($showArrayOnlyFirstElement
-                    ? VariableDebugConfigArrayShowMode::SHOW_FIRST_ELEMENT
-                    : VariableDebugConfigArrayShowMode::SHOW_ALL_ELEMENT
-                )
+                    ? null
+                    : (
+                        $showArrayOnlyFirstElement
+                            ? VariableDebugConfigArrayShowMode::SHOW_FIRST_ELEMENT
+                            : VariableDebugConfigArrayShowMode::SHOW_ALL_ELEMENT
+                    ),
             )
             ->withShowDetailAccessModifiers(true)
             ->withShowValueType(true)
             ->withShowExcludedCount(true);
-
-        return $this;
     }
 
     public function runningInCli(?bool $runningInCli = null): self
     {
         if (is_bool($runningInCli)) {
             $this->printStrategy = $runningInCli
-                ? new VariableDebugCliPrintStrategy
-                : new VariableDebugWebPrintStrategy;
+                ? new VariableDebugCliPrintStrategy()
+                : new VariableDebugWebPrintStrategy();
         }
 
         return $this;
@@ -181,113 +176,63 @@ class VariableDebugConfigurator
 
     public function withIgnoredShowKeyProperties(?array $ignoredShowKeyProperties): self
     {
-        $this->ignoredShowKeyProperties = $ignoredShowKeyProperties;
+        if (is_null($ignoredShowKeyProperties)) {
+            $this->ignoredShowKeyProperties = null;
+        } else {
+            $this->ignoredShowKeyProperties = array_unique(array_merge(
+                $this->ignoredShowKeyProperties ?? [],
+                $ignoredShowKeyProperties,
+            ));
+        }
 
         return $this;
     }
 
     public function withProperties(?array $properties): self
     {
-        $normalized = [];
-
-        foreach ($properties as $property => $value) {
-            if (is_bool($value)) {
-                $normalized[$property] = $value
-                    ? VariableDebugClassPropertyShowValueMode::SHOW_DETAIL
-                    : VariableDebugClassPropertyShowValueMode::SHOW_TYPE_ONLY;
-
-                continue;
-            }
-
-            if ($value instanceof VariableDebugClassPropertyShowValueMode) {
-                $normalized[$property] = $value;
-
-                continue;
-            }
-
-            if (is_int($property)) {
-                $normalized[$value] = VariableDebugClassPropertyShowValueMode::SHOW_DETAIL;
-
-                continue;
-            }
-
-            throw new \RuntimeException("include properties has error occur");
+        if (is_null($properties)) {
+            $this->includedProperties = null;
+        } else {
+            $this->includedProperties = array_merge(
+                $this->includedProperties ?? [],
+                $this->normalizeProperties($properties, 'include properties'),
+            );
         }
-
-        $this->includedProperties = $normalized;
 
         return $this;
     }
 
     public function withPatternProperties(?array $patterns): self
     {
-        $normalized = [];
-
-        foreach ($patterns as $property => $value) {
-            if (is_bool($value)) {
-                $normalized[$property] = $value
-                    ? VariableDebugClassPropertyShowValueMode::SHOW_DETAIL
-                    : VariableDebugClassPropertyShowValueMode::SHOW_TYPE_ONLY;
-
-                continue;
-            }
-
-            if ($value instanceof VariableDebugClassPropertyShowValueMode) {
-                $normalized[$property] = $value;
-
-                continue;
-            }
-
-            if (is_int($property)) {
-                $normalized[$value] = VariableDebugClassPropertyShowValueMode::SHOW_DETAIL;
-
-                continue;
-            }
-
-            throw new \RuntimeException("include property patterns has error occur");
+        if (is_null($patterns)) {
+            $this->includedPatternProperties = null;
+        } else {
+            $this->includedPatternProperties = array_merge(
+                $this->includedPatternProperties ?? [],
+                $this->normalizeProperties($patterns, 'include property patterns'),
+            );
         }
-
-        $this->includedPatternProperties = $normalized;
 
         return $this;
     }
 
     public function withoutProperties(?array $withoutProperties): self
     {
-        $this->excludedProperties = $withoutProperties;
+        if (is_null($withoutProperties)) {
+            $this->excludedProperties = null;
+        } else {
+            $this->excludedProperties = array_unique(array_merge($this->excludedProperties ?? [], $withoutProperties));
+        }
 
         return $this;
     }
 
     public function addClassProperties(string $className, array $properties): self
     {
-        $normalized = [];
-
-        foreach ($properties as $property => $value) {
-            if (is_bool($value)) {
-                $normalized[$property] = $value
-                    ? VariableDebugClassPropertyShowValueMode::SHOW_DETAIL
-                    : VariableDebugClassPropertyShowValueMode::SHOW_TYPE_ONLY;
-
-                continue;
-            }
-
-            if ($value instanceof VariableDebugClassPropertyShowValueMode) {
-                $normalized[$property] = $value;
-
-                continue;
-            }
-
-            if (is_int($property)) {
-                $normalized[$value] = VariableDebugClassPropertyShowValueMode::SHOW_DETAIL;
-
-                continue;
-            }
-
-            throw new \RuntimeException("adding class property {$className} has error occur");
-        }
-
-        $this->includedClassProperties[$className] = $normalized;
+        $this->includedClassProperties[$className] = array_merge(
+            $this->includedClassProperties[$className] ?? [],
+            $this->normalizeProperties($properties, "adding class property {$className}"),
+        );
 
         return $this;
     }
@@ -358,5 +303,36 @@ class VariableDebugConfigurator
     public function useWebThemeNoColor(): self
     {
         return $this->useWebTheme(VariableDebugWebColorTheme::noColor());
+    }
+
+    private function normalizeProperties(array $properties, string $errorPrefix): array
+    {
+        $normalized = [];
+
+        foreach ($properties as $property => $value) {
+            if (is_bool($value)) {
+                $normalized[$property] = $value
+                    ? VariableDebugClassPropertyShowValueMode::SHOW_DETAIL
+                    : VariableDebugClassPropertyShowValueMode::SHOW_TYPE_ONLY;
+
+                continue;
+            }
+
+            if ($value instanceof VariableDebugClassPropertyShowValueMode) {
+                $normalized[$property] = $value;
+
+                continue;
+            }
+
+            if (is_int($property)) {
+                $normalized[$value] = VariableDebugClassPropertyShowValueMode::SHOW_DETAIL;
+
+                continue;
+            }
+
+            throw new \RuntimeException("{$errorPrefix} has error occur");
+        }
+
+        return $normalized;
     }
 }

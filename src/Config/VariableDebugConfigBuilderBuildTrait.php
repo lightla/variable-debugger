@@ -36,6 +36,6 @@ trait VariableDebugConfigBuilderBuildTrait
      */
     private function doBuildWithInjectGlobal(): void
     {
-        VariableDebugConfig::setGlobalConfig($this->doBuild());
+        VariableDebugConfig::mergeGlobalConfig($this->doBuild());
     }
 }

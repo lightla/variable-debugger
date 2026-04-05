@@ -62,6 +62,21 @@ class VariableDebugConfig
         self::$globalConfig = $config;
     }
 
+    /**
+     * @param VariableDebugConfig $config
+     * @return void
+     */
+    public static function mergeGlobalConfig(VariableDebugConfig $config): void
+    {
+        if (self::$globalConfig === null) {
+            self::$globalConfig = $config;
+
+            return;
+        }
+
+        self::$globalConfig->merge($config);
+    }
+
     public static function getGlobalConfig(): ?VariableDebugConfig
     {
         return self::$globalConfig;

@@ -6,8 +6,8 @@ class VariableDebugConfigGlobalPendingBuilder extends VariableDebugConfigurator
 {
     use VariableDebugConfigBuilderBuildTrait;
 
-   public function __destruct()
-   {
-       $this->doBuildWithInjectGlobal();
-   }
+    public function __destruct()
+    {
+        $this->doBuildWithInjectGlobal();
+    }
 }

@@ -144,7 +144,7 @@ git ls-remote --tags origin
 ## GIT DELETE TAG VIA Pattern
 git tag \
 | grep "^v1\.0\." \
-| grep -Ev "v1\.0\.16|v1\.0\.17" \
+| grep -Ev "v1\.0\.19|v1\.0\.25" \
 | xargs -r git tag -d
 
 ----------------

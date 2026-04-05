@@ -16,16 +16,12 @@ function v_dump(...$vars): VariablePendingDebug
     $globalConfig = VariableDebugConfig::getGlobalConfig();
     $config = VariableDebugConfig::builder()->withMaxDepth(10)->build();
 
-    $variableDebugger = new VariableDebugger(
-        $globalConfig?->merge($config) ?? $config,
-    );
+    $variableDebugger = new VariableDebugger($globalConfig?->merge($config) ?? $config);
 
     return new VariablePendingDebug(
         debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS, 1),
         $variableDebugger,
-        fn($backtrace) => $variableDebugger->dumpFromTrace(
-            $backtrace, ...$vars
-        )
+        fn($backtrace) => $variableDebugger->dumpFromTrace($backtrace, ...$vars),
     );
 }
 
@@ -34,17 +30,12 @@ function v_dd(...$vars): VariablePendingDebug
     $globalConfig = VariableDebugConfig::getGlobalConfig();
     $config = VariableDebugConfig::builder()->withMaxDepth(10)->build();
 
-    $variableDebugger = new VariableDebugger(
-        $globalConfig?->merge($config) ?? $config,
-        null,
-    );
+    $variableDebugger = new VariableDebugger($globalConfig?->merge($config) ?? $config, null);
 
     return new VariablePendingDebug(
         debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS, 1),
         $variableDebugger,
-        fn($backtrace) => $variableDebugger->ddFromTrace(
-            $backtrace, ...$vars
-        )
+        fn($backtrace) => $variableDebugger->ddFromTrace($backtrace, ...$vars),
     );
 }
 
