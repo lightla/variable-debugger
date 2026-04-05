@@ -142,10 +142,13 @@ v_dd($u, ['x' => 1, (object)['y' => 1]])
 git ls-remote --tags origin
 
 ## GIT DELETE TAG VIA Pattern (-Ev: ignore pattern)
-git tag \
-| grep "^v1\.0\." \
-| grep -Ev "v1\.0\.19|v1\.0\.25" \
-| xargs -r git tag -d
+git tag -d v1.0.{17..26}
+
+# SHOW REMOTE TAG 
+git ls-remote --tags origin
+
+# GIT PUSH DELETE TAG 
+git push origin --delete v1.0.{17..26}
 
 # GIT PUSH TAG 
 git push origin v1.0.27
